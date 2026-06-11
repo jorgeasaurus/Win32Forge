@@ -1,6 +1,7 @@
 $script:Win32LobAppType = 'microsoft.graph.win32LobApp'
 $script:DefaultGraphScopes = @('DeviceManagementApps.ReadWrite.All')
 $script:DefaultChunkSizeInBytes = 6MB
+$script:SasRenewalIntervalMilliseconds = 450000
 
 function Test-PublisherRequiredModule {
     [CmdletBinding()]
@@ -109,33 +110,30 @@ function Compress-IntuneWin32PackageFile {
 
     Test-PublisherRequiredModule -Name 'SvRooij.ContentPrep.Cmdlet' -CommandName 'New-IntuneWinPackage'
 
-    $sourcePath = Resolve-IntuneWin32PublisherPath -Path $SourceDirectory -PathType Container
-    $setupPath = Resolve-IntuneWin32PublisherFile -SourceDirectory $sourcePath -FileName $SetupFile -Purpose 'Install script'
-    $relativeSetupPath = Get-SourceRelativePath -SourceDirectory $sourcePath -FilePath $setupPath
-
     if (-not (Test-Path -LiteralPath $OutputDirectory -PathType Container)) {
         New-Item -Path $OutputDirectory -ItemType Directory -Force | Out-Null
     }
 
-    $started = Get-Date
-    New-IntuneWinPackage -SourcePath $sourcePath -SetupFile $relativeSetupPath -DestinationPath $OutputDirectory | Out-Null
+    # Package into a fresh per-invocation directory so the output file is unambiguous,
+    # then move it to the caller-facing output directory.
+    $packageDirectory = Join-Path $OutputDirectory ('pkg-' + [guid]::NewGuid().ToString('N'))
+    New-Item -Path $packageDirectory -ItemType Directory -Force | Out-Null
 
-    $expectedName = '{0}.intunewin' -f [System.IO.Path]::GetFileNameWithoutExtension($relativeSetupPath)
-    $expectedPath = Join-Path $OutputDirectory $expectedName
-    if (Test-Path -LiteralPath $expectedPath -PathType Leaf) {
-        return (Resolve-Path -LiteralPath $expectedPath).ProviderPath
+    try {
+        New-IntuneWinPackage -SourcePath $SourceDirectory -SetupFile $SetupFile -DestinationPath $packageDirectory | Out-Null
+
+        $package = Get-ChildItem -LiteralPath $packageDirectory -Filter '*.intunewin' -File | Select-Object -First 1
+        if (-not $package) {
+            throw "New-IntuneWinPackage completed, but no .intunewin file was found in '$packageDirectory'."
+        }
+
+        $destinationPath = Join-Path $OutputDirectory $package.Name
+        Move-Item -LiteralPath $package.FullName -Destination $destinationPath -Force
+        (Resolve-Path -LiteralPath $destinationPath).ProviderPath
     }
-
-    $package = Get-ChildItem -LiteralPath $OutputDirectory -Filter '*.intunewin' -File |
-        Where-Object { $_.LastWriteTime -ge $started } |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
-
-    if (-not $package) {
-        throw "New-IntuneWinPackage completed, but no .intunewin file was found in '$OutputDirectory'."
+    finally {
+        Remove-Item -LiteralPath $packageDirectory -Recurse -Force -ErrorAction SilentlyContinue
     }
-
-    $package.FullName
 }
 
 function Get-IntuneWin32PackageManifest {
@@ -481,7 +479,7 @@ function Send-AzureStorageFile {
 
             Send-AzureStorageBlock -SasUri $SasUri -BlockId $blockId -Body $chunk
 
-            if ($stream.Position -lt $stream.Length -and $renewalTimer.ElapsedMilliseconds -ge 450000) {
+            if ($stream.Position -lt $stream.Length -and $renewalTimer.ElapsedMilliseconds -ge $script:SasRenewalIntervalMilliseconds) {
                 Invoke-MgGraphRequest -Method POST -Uri "$FileUri/renewUpload" -Body '' -ErrorAction Stop | Out-Null
                 $renewedFile = Wait-IntuneWin32FileProcessing -FileUri $FileUri -Stage 'AzureStorageUriRenewal'
                 $SasUri = $renewedFile.azureStorageUri
@@ -615,8 +613,50 @@ function Get-PowerShellCommandLine {
     "powershell.exe -ExecutionPolicy Bypass -File `"$escapedScriptPath`""
 }
 
-function Publish-IntuneWin32App {
+function Connect-IntuneGraph {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingConvertToSecureStringWithPlainText', '', Justification = 'Microsoft Graph client-secret authentication requires converting the supplied secret to SecureString.')]
+    [CmdletBinding()]
+    param(
+        [string]$TenantId,
+
+        [string]$ClientId,
+
+        [string]$ClientSecret
+    )
+
+    Import-Module Microsoft.Graph.Authentication -ErrorAction Stop
+
+    $connectParams = @{
+        NoWelcome   = $true
+        ErrorAction = 'Stop'
+    }
+
+    if ($ClientId -or $ClientSecret) {
+        if (-not ($TenantId -and $ClientId -and $ClientSecret)) {
+            throw 'TenantId, ClientId, and ClientSecret are all required for app-only authentication.'
+        }
+
+        $secureSecret = ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
+        $connectParams.TenantId = $TenantId
+        $connectParams.ClientSecretCredential = [pscredential]::new($ClientId, $secureSecret)
+    }
+    else {
+        $connectParams.Scopes = $script:DefaultGraphScopes
+        if ($TenantId) {
+            $connectParams.TenantId = $TenantId
+        }
+    }
+
+    Connect-MgGraph @connectParams | Out-Null
+    $context = Get-MgContext
+    if (-not $context) {
+        throw 'Microsoft Graph connection did not return a context.'
+    }
+
+    $context
+}
+
+function Publish-IntuneWin32App {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(Mandatory = $true)]
@@ -680,34 +720,7 @@ function Publish-IntuneWin32App {
             Test-PublisherRequiredModule -Name 'Microsoft.Graph.Authentication'
 
             $packagePath = Compress-IntuneWin32PackageFile -SourceDirectory $sourcePath -SetupFile $relativeInstallScript -OutputDirectory $OutputDirectory
-
-            Import-Module Microsoft.Graph.Authentication -ErrorAction Stop
-            $connectParams = @{
-                NoWelcome   = $true
-                ErrorAction = 'Stop'
-            }
-
-            if ($ClientId -or $ClientSecret) {
-                if (-not ($TenantId -and $ClientId -and $ClientSecret)) {
-                    throw 'TenantId, ClientId, and ClientSecret are all required for app-only authentication.'
-                }
-
-                $secureSecret = ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
-                $connectParams.TenantId = $TenantId
-                $connectParams.ClientSecretCredential = [pscredential]::new($ClientId, $secureSecret)
-            }
-            else {
-                $connectParams.Scopes = $script:DefaultGraphScopes
-                if ($TenantId) {
-                    $connectParams.TenantId = $TenantId
-                }
-            }
-
-            Connect-MgGraph @connectParams | Out-Null
-            $context = Get-MgContext
-            if (-not $context) {
-                throw 'Microsoft Graph connection did not return a context.'
-            }
+            $context = Connect-IntuneGraph -TenantId $TenantId -ClientId $ClientId -ClientSecret $ClientSecret
 
             $existingApps = @(Get-IntuneWin32AppByDisplayName -DisplayName $Name)
             if ($existingApps.Count -gt 0 -and -not $Force) {

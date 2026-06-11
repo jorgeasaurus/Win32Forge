@@ -91,20 +91,6 @@ Describe 'Publish-IntuneWin32App orchestration' {
             Mock Get-IntuneWin32AppByDisplayName { @() }
             Mock Remove-IntuneWin32App {}
             Mock Invoke-IntuneWin32LobUpload {
-                param(
-                    $PackagePath,
-                    $DisplayName,
-                    $Publisher,
-                    $Version,
-                    $Description,
-                    $InstallCommandLine,
-                    $UninstallCommandLine,
-                    $DetectionScriptPath,
-                    $IconPath,
-                    $StagingDirectory
-                )
-
-                $script:UploadArguments = $PSBoundParameters
                 [pscustomobject]@{
                     id          = 'app-1'
                     displayName = $DisplayName
@@ -121,16 +107,20 @@ Describe 'Publish-IntuneWin32App orchestration' {
                 -OutputDirectory $script:OutputDirectory `
                 -KeepConnected
 
-            $script:UploadArguments.DisplayName | Should -Be 'Contoso Tool'
-            $script:UploadArguments.Publisher | Should -Be 'Contoso'
-            $script:UploadArguments.Version | Should -Be '1.2.3'
-            $script:UploadArguments.Description | Should -Be 'Contoso Tool 1.2.3'
-            $script:UploadArguments.InstallCommandLine | Should -Be 'powershell.exe -ExecutionPolicy Bypass -File "install.ps1"'
-            $script:UploadArguments.UninstallCommandLine | Should -Be 'powershell.exe -ExecutionPolicy Bypass -File "uninstall.ps1"'
-            $script:UploadArguments.DetectionScriptPath | Should -Be (Join-Path $script:SourceDirectory 'detection.ps1')
-            $script:UploadArguments.IconPath | Should -Be (Join-Path $script:SourceDirectory 'icon.png')
             $result.Id | Should -Be 'app-1'
             $result.PackagePath | Should -Be (Join-Path $script:OutputDirectory 'install.intunewin')
+
+            Should -Invoke Invoke-IntuneWin32LobUpload -Times 1 -ParameterFilter {
+                $DisplayName -eq 'Contoso Tool' -and
+                $Publisher -eq 'Contoso' -and
+                $Developer -eq 'Contoso' -and
+                $Version -eq '1.2.3' -and
+                $Description -eq 'Contoso Tool 1.2.3' -and
+                $InstallCommandLine -eq 'powershell.exe -ExecutionPolicy Bypass -File "install.ps1"' -and
+                $UninstallCommandLine -eq 'powershell.exe -ExecutionPolicy Bypass -File "uninstall.ps1"' -and
+                $DetectionScriptPath -eq (Join-Path $script:SourceDirectory 'detection.ps1') -and
+                $IconPath -eq (Join-Path $script:SourceDirectory 'icon.png')
+            }
         }
 
         It 'blocks duplicate Win32 apps unless Force is used' {
