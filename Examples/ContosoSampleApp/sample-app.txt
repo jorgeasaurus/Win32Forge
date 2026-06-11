@@ -1,0 +1,3 @@
+Contoso Sample App payload.
+
+This file is copied to ProgramData by install.ps1 so detection.ps1 has a concrete install marker to validate.
