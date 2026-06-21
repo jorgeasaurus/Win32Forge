@@ -690,7 +690,7 @@ function Publish-IntuneWin32App {
         [string]$IconFile = 'icon.png',
 
         [ValidateNotNullOrEmpty()]
-        [string]$OutputDirectory = (Join-Path ([System.IO.Path]::GetTempPath()) 'IntuneWin32AppPublisher'),
+        [string]$OutputDirectory = (Join-Path ([System.IO.Path]::GetTempPath()) 'Win32Forge'),
 
         [string]$TenantId,
 

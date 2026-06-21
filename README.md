@@ -1,4 +1,4 @@
-# IntuneWin32AppPublisher
+# Win32Forge
 
 Packages a source folder as an `.intunewin` file and publishes it to Intune as a Win32 app via Microsoft Graph.
 

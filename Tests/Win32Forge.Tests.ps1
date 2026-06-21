@@ -1,9 +1,9 @@
 $script:RepoRoot = Split-Path -Parent $PSScriptRoot
-$script:ModulePath = Join-Path $script:RepoRoot 'IntuneWin32AppPublisher.psm1'
+$script:ModulePath = Join-Path $script:RepoRoot 'Win32Forge.psm1'
 Import-Module $script:ModulePath -Force
 
-Describe 'IntuneWin32AppPublisher helpers' {
-    InModuleScope IntuneWin32AppPublisher {
+Describe 'Win32Forge helpers' {
+    InModuleScope Win32Forge {
         BeforeEach {
             $script:SourceDirectory = Join-Path $TestDrive 'source'
             New-Item -Path $script:SourceDirectory -ItemType Directory -Force | Out-Null
@@ -67,7 +67,7 @@ Describe 'IntuneWin32AppPublisher helpers' {
 }
 
 Describe 'Publish-IntuneWin32App orchestration' {
-    InModuleScope IntuneWin32AppPublisher {
+    InModuleScope Win32Forge {
         BeforeEach {
             $script:SourceDirectory = Join-Path $TestDrive 'source'
             $script:OutputDirectory = Join-Path $TestDrive 'output'
@@ -160,7 +160,7 @@ Describe 'Publish-IntuneWin32App orchestration' {
 }
 
 Describe 'Example app directory' {
-    InModuleScope IntuneWin32AppPublisher {
+    InModuleScope Win32Forge {
         It 'contains the default source files expected by Publish-IntuneWin32App' {
             $repoRoot = Split-Path -Parent $PSScriptRoot
             $examplePath = Join-Path $repoRoot 'Examples/ContosoSampleApp'
@@ -181,7 +181,7 @@ Describe 'Example app directory' {
 }
 
 Describe 'Invoke-IntuneWin32LobUpload Graph requests' {
-    InModuleScope IntuneWin32AppPublisher {
+    InModuleScope Win32Forge {
         BeforeEach {
             $script:SourceDirectory = Join-Path $TestDrive 'source'
             $script:StagingDirectory = Join-Path $TestDrive 'staging'

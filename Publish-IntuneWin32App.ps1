@@ -33,7 +33,7 @@ param(
     [string]$IconFile = 'icon.png',
 
     [ValidateNotNullOrEmpty()]
-    [string]$OutputDirectory = (Join-Path ([System.IO.Path]::GetTempPath()) 'IntuneWin32AppPublisher'),
+    [string]$OutputDirectory = (Join-Path ([System.IO.Path]::GetTempPath()) 'Win32Forge'),
 
     [string]$TenantId,
 
@@ -46,7 +46,7 @@ param(
     [switch]$KeepConnected
 )
 
-$modulePath = Join-Path $PSScriptRoot 'IntuneWin32AppPublisher.psm1'
+$modulePath = Join-Path $PSScriptRoot 'Win32Forge.psm1'
 Import-Module $modulePath -Force -ErrorAction Stop
 
 Publish-IntuneWin32App @PSBoundParameters
