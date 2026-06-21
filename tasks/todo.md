@@ -70,3 +70,11 @@
 - Added the `PSGALLERY_API_KEY` repository secret and reran the release workflow.
 - Verified the release workflow published to PowerShell Gallery and created the GitHub Release.
 - Verified `Find-Module -Name Win32Forge -RequiredVersion 0.1.1 -Repository PSGallery` returns `Win32Forge 0.1.1`.
+
+## Social card update
+
+- [x] Add the provided social card as a docs asset.
+- [x] Wire the GitHub Pages site to use the card for Open Graph and Twitter previews.
+- [x] Show the card on the website and README.
+- [x] Set the GitHub repository homepage to the Pages site.
+- [x] Verify docs references, image dimensions, and git status.

@@ -410,6 +410,37 @@ section {
     padding: clamp(3.25rem, 5.8vw, 5rem) 0;
 }
 
+.social-preview {
+    display: grid;
+    grid-template-columns: minmax(0, 0.42fr) minmax(420px, 0.82fr);
+    gap: clamp(1.4rem, 4vw, 3rem);
+    align-items: center;
+    padding-top: clamp(1rem, 3vw, 2rem);
+}
+
+.social-preview-copy h2 {
+    max-width: 24rem;
+    margin-bottom: 0;
+    font-size: clamp(2rem, 4vw, 4rem);
+}
+
+.social-card-frame {
+    margin: 0;
+    padding: 0.72rem;
+    background: var(--sheet);
+    border: var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+}
+
+.social-card-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+}
+
 .section-head {
     display: grid;
     grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.5fr);
@@ -733,6 +764,7 @@ code {
 
 @media (max-width: 900px) {
     .hero,
+    .social-preview,
     .section-head,
     .grid-two {
         grid-template-columns: 1fr;
@@ -750,6 +782,10 @@ code {
     .section-head > p {
         justify-self: start;
         max-width: 38rem;
+    }
+
+    .social-preview-copy h2 {
+        max-width: 36rem;
     }
 
     .steps {
@@ -791,6 +827,7 @@ code {
 
     .button,
     .forge-card,
+    .social-card-frame,
     .step-card,
     .doc-card,
     .command-card,

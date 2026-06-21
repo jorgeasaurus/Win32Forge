@@ -7,6 +7,10 @@ Win32Forge takes an app folder, packaging scripts, and an icon, then turns them 
 Package. Publish. Deploy.
 
 <p align="center">
+  <img src="docs/assets/win32forge-social-card.jpg" alt="Win32Forge packaging pipeline social card" width="960">
+</p>
+
+<p align="center">
   <a href="https://github.com/jorgeasaurus/Win32Forge/actions/workflows/ci.yml"><img src="https://github.com/jorgeasaurus/Win32Forge/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://www.powershellgallery.com/packages/Win32Forge"><img src="https://img.shields.io/powershellgallery/v/Win32Forge?label=PSGallery&color=blue" alt="PowerShell Gallery Version"></a>
   <a href="https://www.powershellgallery.com/packages/Win32Forge"><img src="https://img.shields.io/powershellgallery/dt/Win32Forge?label=Downloads&color=green" alt="PowerShell Gallery Downloads"></a>
