@@ -1,5 +1,5 @@
 /.idea/
-/.vscode/
+/build/
 /output/
 /TestResults/
 *.intunewin

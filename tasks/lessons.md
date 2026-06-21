@@ -1,0 +1,12 @@
+- For docs pages, keep plain-language copy professional. Avoid literal ELI5 framing, childish metaphors, and overly cute labels unless the user explicitly asks for that tone.
+- For hero pages, inspect a rendered desktop preview after layout or artwork changes. Keep decorative artwork within its grid column and avoid dense text inside illustrations where it can collide at preview sizes.
+- For logo-like hero art, keep the project name as the primary hierarchy and map visuals to the actual product workflow instead of generic completion imagery.
+- Preserve distinctive visual texture when refining polish unless the user explicitly asks for a flatter or quieter surface.
+- For dense SVG workflow art, check the rendered thumbnail for icon spacing and label fit after every resize; source coordinates that look balanced in code can still crowd at card scale.
+- When a user points to an existing UI element as the target style, reuse its exact CSS treatment instead of approximating it with a new custom layer.
+- When removing a visual effect by request, remove the specific effect property first and leave unrelated styling intact unless the user asks for a broader redesign.
+- For broad visual polish prompts, fix composition and hierarchy before decorative details so the final pass feels intentional instead of merely restyled.
+- For technical product illustrations, prefer literal workflow metaphors over abstract symbols when the user says an icon is not intuitive.
+- When a user asks to redesign only one visual subsystem, preserve the surrounding layout and constrain edits to that subsystem plus direct alignment support.
+- For full-page polish passes, preserve stable anchors and copy-target IDs while tuning layout, then verify counts for interactive elements before visual signoff.
+- For responsive docs checks, use an explicit mobile viewport through DevTools or equivalent. Chrome CLI `--window-size` can crop a wider desktop layout and create misleading overflow screenshots.

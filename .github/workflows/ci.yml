@@ -1,0 +1,140 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ['**']
+    tags:
+      - 'v*.*.*'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+  pull_request:
+    branches: ['**']
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+  checks: read
+
+env:
+  MODULE_NAME: Win32Forge
+  MODULE_MANIFEST: Win32Forge.psd1
+  MODULE_BUILD_PATH: build/Win32Forge
+  TEST_RESULTS_PATH: build/TestResults/TestResults.xml
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Run Win32Forge CI
+        shell: pwsh
+        run: ./build.ps1 -Task CI
+
+      - name: Upload Win32Forge Test Results
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: win32forge-test-results-${{ matrix.os }}
+          path: ${{ env.TEST_RESULTS_PATH }}
+          if-no-files-found: warn
+
+      - name: Upload Win32Forge Module Artifact
+        if: success() && matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: win32forge-module
+          path: ${{ env.MODULE_BUILD_PATH }}
+          if-no-files-found: error
+
+  release:
+    name: Publish Win32Forge
+    needs: build
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Download Win32Forge Module Artifact
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: win32forge-module
+          path: ${{ env.MODULE_BUILD_PATH }}
+
+      - name: Validate Win32Forge Artifact
+        id: win32forge_info
+        shell: pwsh
+        run: |
+          $manifestPath = Join-Path '${{ env.MODULE_BUILD_PATH }}' '${{ env.MODULE_MANIFEST }}'
+          if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+            throw "Win32Forge manifest not found at '$manifestPath'."
+          }
+
+          $manifest = Test-ModuleManifest -Path $manifestPath
+          if ($manifest.Name -ne '${{ env.MODULE_NAME }}') {
+            throw "Expected module '${{ env.MODULE_NAME }}', but artifact contains '$($manifest.Name)'."
+          }
+
+          $tagVersion = '${{ github.ref_name }}' -replace '^v', ''
+          if ([string]$manifest.Version -ne $tagVersion) {
+            throw "Tag version ($tagVersion) does not match Win32Forge manifest version ($($manifest.Version))."
+          }
+
+          $moduleData = Import-PowerShellDataFile -Path $manifestPath
+          "module_version=$($manifest.Version)" >> $env:GITHUB_OUTPUT
+          "release_notes<<EOF" >> $env:GITHUB_OUTPUT
+          $moduleData.PrivateData.PSData.ReleaseNotes >> $env:GITHUB_OUTPUT
+          "EOF" >> $env:GITHUB_OUTPUT
+
+      - name: Publish Win32Forge to PowerShell Gallery
+        shell: pwsh
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          if (-not $env:PSGALLERY_API_KEY) {
+            throw 'PSGALLERY_API_KEY secret is not set.'
+          }
+
+          Publish-Module -Path '${{ env.MODULE_BUILD_PATH }}' -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Force
+
+      - name: Create Win32Forge Release Archive
+        id: release_archive
+        shell: pwsh
+        run: |
+          $zipName = '${{ env.MODULE_NAME }}-v${{ steps.win32forge_info.outputs.module_version }}.zip'
+          New-Item -Path build -ItemType Directory -Force | Out-Null
+          Compress-Archive -Path '${{ env.MODULE_BUILD_PATH }}/*' -DestinationPath "./build/$zipName" -Force
+          "archive_path=build/$zipName" >> $env:GITHUB_OUTPUT
+
+      - name: Create Win32Forge GitHub Release
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
+        with:
+          name: Win32Forge v${{ steps.win32forge_info.outputs.module_version }}
+          body: |
+            ## Win32Forge v${{ steps.win32forge_info.outputs.module_version }}
+
+            ```powershell
+            Install-Module -Name Win32Forge -Scope CurrentUser
+            ```
+
+            ${{ steps.win32forge_info.outputs.release_notes }}
+          draft: false
+          prerelease: false
+          files: ${{ steps.release_archive.outputs.archive_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

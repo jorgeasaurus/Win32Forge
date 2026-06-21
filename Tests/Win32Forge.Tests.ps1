@@ -1,6 +1,21 @@
-$script:RepoRoot = Split-Path -Parent $PSScriptRoot
-$script:ModulePath = Join-Path $script:RepoRoot 'Win32Forge.psm1'
-Import-Module $script:ModulePath -Force
+$modulePathForDiscovery = Join-Path (Split-Path -Parent $PSScriptRoot) 'Win32Forge.psd1'
+Import-Module $modulePathForDiscovery -Force
+
+BeforeAll {
+    $script:RepoRoot = Split-Path -Parent $PSScriptRoot
+    $script:ModulePath = Join-Path $script:RepoRoot 'Win32Forge.psd1'
+    Import-Module $script:ModulePath -Force
+}
+
+Describe 'Win32Forge module manifest' {
+    It 'imports the module and exports the public command' {
+        { Import-Module $script:ModulePath -Force } | Should -Not -Throw
+
+        $module = Get-Module Win32Forge
+        $module.ExportedFunctions.Keys | Should -HaveCount 1
+        $module.ExportedFunctions.Keys | Should -Contain 'Publish-IntuneWin32App'
+    }
+}
 
 Describe 'Win32Forge helpers' {
     InModuleScope Win32Forge {
@@ -22,13 +37,72 @@ Describe 'Win32Forge helpers' {
         }
 
         It 'builds a PowerShell script detection rule from detection.ps1' {
-            $rule = ConvertTo-PowerShellScriptDetectionRule -ScriptPath (Join-Path $script:SourceDirectory 'detection.ps1')
+            $rule = ConvertTo-PowerShellScriptDetectionRule `
+                -ScriptPath (Join-Path $script:SourceDirectory 'detection.ps1') `
+                -EnforceSignatureCheck $true `
+                -RunAs32Bit $true
             $decodedScript = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($rule.scriptContent))
 
             $rule.'@odata.type' | Should -Be '#microsoft.graph.win32LobAppPowerShellScriptDetection'
-            $rule.enforceSignatureCheck | Should -BeFalse
-            $rule.runAs32Bit | Should -BeFalse
+            $rule.enforceSignatureCheck | Should -BeTrue
+            $rule.runAs32Bit | Should -BeTrue
             $decodedScript | Should -Match 'Detected'
+        }
+
+        It 'builds file system, registry, and product code detection rules from structured input' {
+            $rules = ConvertTo-Win32LobAppDetectionRuleSet `
+                -SourceDirectory $script:SourceDirectory `
+                -DefaultDetectionScript 'detection.ps1' `
+                -Rule @(
+                @{
+                    Type                 = 'FileSystem'
+                    Path                 = '%ProgramFiles%\Contoso'
+                    FileOrFolderName     = 'Contoso.exe'
+                    DetectionType        = 'version'
+                    Operator             = 'greaterThanOrEqual'
+                    DetectionValue       = '1.2.3'
+                    Check32BitOn64System = $true
+                }
+                @{
+                    Type           = 'Registry'
+                    KeyPath        = 'HKEY_LOCAL_MACHINE\Software\Contoso'
+                    ValueName      = 'Version'
+                    DetectionType  = 'version'
+                    Operator       = 'equal'
+                    DetectionValue = '1.2.3'
+                }
+                @{
+                    Type                   = 'ProductCode'
+                    ProductCode            = '{11111111-1111-1111-1111-111111111111}'
+                    ProductVersionOperator = 'greaterThanOrEqual'
+                    ProductVersion         = '1.2.3'
+                }
+            )
+
+            $rules | Should -HaveCount 3
+            $rules[0].'@odata.type' | Should -Be '#microsoft.graph.win32LobAppFileSystemDetection'
+            $rules[0].detectionType | Should -Be 'version'
+            $rules[0].operator | Should -Be 'greaterThanOrEqual'
+            $rules[0].check32BitOn64System | Should -BeTrue
+            $rules[1].'@odata.type' | Should -Be '#microsoft.graph.win32LobAppRegistryDetection'
+            $rules[1].keyPath | Should -Be 'HKEY_LOCAL_MACHINE\Software\Contoso'
+            $rules[2].'@odata.type' | Should -Be '#microsoft.graph.win32LobAppProductCodeDetection'
+            $rules[2].productCode | Should -Be '{11111111-1111-1111-1111-111111111111}'
+        }
+
+        It 'passes raw Graph detection rules through unchanged' {
+            $rawRule = @{
+                '@odata.type' = '#microsoft.graph.win32LobAppProductCodeDetection'
+                productCode   = '{22222222-2222-2222-2222-222222222222}'
+            }
+
+            $rules = ConvertTo-Win32LobAppDetectionRuleSet `
+                -SourceDirectory $script:SourceDirectory `
+                -DefaultDetectionScript 'detection.ps1' `
+                -Rule @($rawRule)
+
+            $rules | Should -HaveCount 1
+            $rules[0] | Should -Be $rawRule
         }
 
         It 'creates Company Portal icon MIME content from a PNG file' {
@@ -50,7 +124,13 @@ Describe 'Win32Forge helpers' {
                 -InstallCommandLine 'powershell.exe -ExecutionPolicy Bypass -File "install.ps1"' `
                 -UninstallCommandLine 'powershell.exe -ExecutionPolicy Bypass -File "uninstall.ps1"' `
                 -DetectionRules @(@{ scriptContent = 'abc' }) `
-                -ReturnCodes @(Get-DefaultWin32ReturnCode) `
+                -ReturnCodes @(
+                @{ returnCode = 0; type = 'success' }
+                @{ returnCode = 1707; type = 'success' }
+                @{ returnCode = 3010; type = 'softReboot' }
+                @{ returnCode = 1641; type = 'hardReboot' }
+                @{ returnCode = 1618; type = 'retry' }
+            ) `
                 -LargeIcon @{ type = 'image/png'; value = 'abc' }
 
             $body.'@odata.type' | Should -Be '#microsoft.graph.win32LobApp'
@@ -118,8 +198,29 @@ Describe 'Publish-IntuneWin32App orchestration' {
                 $Description -eq 'Contoso Tool 1.2.3' -and
                 $InstallCommandLine -eq 'powershell.exe -ExecutionPolicy Bypass -File "install.ps1"' -and
                 $UninstallCommandLine -eq 'powershell.exe -ExecutionPolicy Bypass -File "uninstall.ps1"' -and
-                $DetectionScriptPath -eq (Join-Path $script:SourceDirectory 'detection.ps1') -and
+                $DetectionRules[0].'@odata.type' -eq '#microsoft.graph.win32LobAppPowerShellScriptDetection' -and
                 $IconPath -eq (Join-Path $script:SourceDirectory 'icon.png')
+            }
+        }
+
+        It 'uploads with a non-script detection rule without requiring detection.ps1' {
+            Remove-Item -Path (Join-Path $script:SourceDirectory 'detection.ps1') -Force
+
+            Publish-IntuneWin32App `
+                -SourceDirectory $script:SourceDirectory `
+                -Name 'Contoso Tool' `
+                -Publisher 'Contoso' `
+                -Version '1.2.3' `
+                -DetectionRule @{
+                Type        = 'ProductCode'
+                ProductCode = '{33333333-3333-3333-3333-333333333333}'
+            } `
+                -OutputDirectory $script:OutputDirectory `
+                -KeepConnected | Out-Null
+
+            Should -Invoke Invoke-IntuneWin32LobUpload -Times 1 -ParameterFilter {
+                $DetectionRules[0].'@odata.type' -eq '#microsoft.graph.win32LobAppProductCodeDetection' -and
+                $DetectionRules[0].productCode -eq '{33333333-3333-3333-3333-333333333333}'
             }
         }
 
@@ -220,10 +321,10 @@ Describe 'Invoke-IntuneWin32LobUpload Graph requests' {
                 param($Method, $Uri, $Body)
 
                 $script:GraphRequests.Add([pscustomobject]@{
-                    Method = $Method
-                    Uri    = $Uri
-                    Body   = $Body
-                })
+                        Method = $Method
+                        Uri    = $Uri
+                        Body   = $Body
+                    })
 
                 if ($Uri -eq 'beta/deviceAppManagement/mobileApps/') {
                     return [pscustomobject]@{ id = 'app-1'; displayName = 'Contoso Tool' }
@@ -261,18 +362,26 @@ Describe 'Invoke-IntuneWin32LobUpload Graph requests' {
                 -Description 'Contoso Tool 1.2.3' `
                 -InstallCommandLine 'powershell.exe -ExecutionPolicy Bypass -File "install.ps1"' `
                 -UninstallCommandLine 'powershell.exe -ExecutionPolicy Bypass -File "uninstall.ps1"' `
-                -DetectionScriptPath (Join-Path $script:SourceDirectory 'detection.ps1') `
+                -DetectionRules @(@{
+                    '@odata.type'    = '#microsoft.graph.win32LobAppFileSystemDetection'
+                    path             = '%ProgramFiles%\Contoso'
+                    fileOrFolderName = 'Contoso.exe'
+                    detectionType    = 'exists'
+                    operator         = 'notConfigured'
+                    detectionValue   = ''
+                }) `
                 -IconPath (Join-Path $script:SourceDirectory 'icon.png') `
                 -StagingDirectory $script:StagingDirectory | Out-Null
 
-            $createRequest = $script:GraphRequests | Where-Object Uri -eq 'beta/deviceAppManagement/mobileApps/' | Select-Object -First 1
+            $createRequest = $script:GraphRequests | Where-Object Uri -EQ 'beta/deviceAppManagement/mobileApps/' | Select-Object -First 1
             $createRequest.Method | Should -Be 'POST'
             $createRequest.Body.displayName | Should -Be 'Contoso Tool'
             $createRequest.Body.publisher | Should -Be 'Contoso'
             $createRequest.Body.displayVersion | Should -Be '1.2.3'
             $createRequest.Body.installCommandLine | Should -Be 'powershell.exe -ExecutionPolicy Bypass -File "install.ps1"'
             $createRequest.Body.uninstallCommandLine | Should -Be 'powershell.exe -ExecutionPolicy Bypass -File "uninstall.ps1"'
-            $createRequest.Body.detectionRules[0].'@odata.type' | Should -Be '#microsoft.graph.win32LobAppPowerShellScriptDetection'
+            $createRequest.Body.detectionRules[0].'@odata.type' | Should -Be '#microsoft.graph.win32LobAppFileSystemDetection'
+            $createRequest.Body.detectionRules[0].fileOrFolderName | Should -Be 'Contoso.exe'
             $createRequest.Body.largeIcon.type | Should -Be 'image/png'
 
             Should -Invoke Send-AzureStorageFile -ParameterFilter {
@@ -280,7 +389,7 @@ Describe 'Invoke-IntuneWin32LobUpload Graph requests' {
                 $FilePath -like '*encrypted.bin'
             } -Times 1
 
-            ($script:GraphRequests | Where-Object Uri -like '*/commit').Count | Should -Be 1
+            ($script:GraphRequests | Where-Object Uri -Like '*/commit').Count | Should -Be 1
             ($script:GraphRequests | Where-Object { $_.Method -eq 'PATCH' -and $_.Uri -eq 'beta/deviceAppManagement/mobileApps/app-1' }).Body.committedContentVersion |
                 Should -Be 'version-1'
         }
