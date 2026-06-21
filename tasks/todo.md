@@ -48,3 +48,10 @@
 - [x] Bootstrap release job before manifest validation.
 - [x] Enable GitHub Pages configuration from the Pages workflow.
 - [x] Verify workflows and local CI.
+
+## GitHub Actions follow-up review
+
+- Fixed runner dependency install by using `Install-PSResource` when available and keeping `Install-Module` as the fallback.
+- Fixed future tag releases by checking out the repository and bootstrapping dependencies before artifact manifest validation.
+- Enabled GitHub Pages as a workflow-backed site and verified the docs deploy at `https://jorgeasaurus.github.io/Win32Forge/`.
+- Verified main CI and Pages are green; the historical `v0.1.0` tag run remains failed because that tag points to the pre-fix commit.
