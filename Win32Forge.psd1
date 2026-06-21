@@ -1,6 +1,6 @@
 @{
     RootModule        = 'Win32Forge.psm1'
-    ModuleVersion     = '0.1.0'
+    ModuleVersion     = '0.1.1'
     GUID              = '265fb73f-40b9-43f2-8668-fb45c2684656'
     Author            = 'Jorgeasaurus'
     CompanyName       = 'Jorgeasaurus'
@@ -31,6 +31,11 @@
             Tags         = @('Intune', 'Win32', 'MicrosoftGraph', 'EndpointManager', 'PSEdition_Core')
             ProjectUri   = 'https://github.com/jorgeasaurus/Win32Forge'
             ReleaseNotes = @'
+## v0.1.1
+
+- Fix GitHub-hosted dependency bootstrap for release publishing.
+- Bootstrap release dependencies before manifest validation.
+
 ## v0.1.0
 
 - Initial PowerShell Gallery packaging for Win32Forge.

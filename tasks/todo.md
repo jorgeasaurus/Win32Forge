@@ -55,3 +55,10 @@
 - Fixed future tag releases by checking out the repository and bootstrapping dependencies before artifact manifest validation.
 - Enabled GitHub Pages as a workflow-backed site and verified the docs deploy at `https://jorgeasaurus.github.io/Win32Forge/`.
 - Verified main CI and Pages are green; the historical `v0.1.0` tag run remains failed because that tag points to the pre-fix commit.
+
+## v0.1.1 release
+
+- [x] Bump manifest version and release notes to `0.1.1`.
+- [x] Verify manifest version, parser, and CI.
+- [ ] Commit, tag `v0.1.1`, and push `main` plus the tag.
+- [ ] Watch the release workflow.

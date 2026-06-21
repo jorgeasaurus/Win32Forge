@@ -291,4 +291,4 @@ Returns an object with `DisplayName`, `Id`, `Version`, `PackagePath`, and `Tenan
 ./build.ps1 -Task CI
 ```
 
-To publish, set the `PSGALLERY_API_KEY` repository secret, update `Win32Forge.psd1`, then push a matching tag such as `v0.1.0`.
+To publish, set the `PSGALLERY_API_KEY` repository secret, update `Win32Forge.psd1`, then push a matching tag such as `v0.1.1`.
