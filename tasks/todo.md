@@ -67,4 +67,6 @@
 
 - Pushed `main` and annotated tag `v0.1.1`.
 - Verified local CI, manifest version, and main CI.
-- Release workflow passed build/bootstrap/manifest validation and stopped at PowerShell Gallery publish because `PSGALLERY_API_KEY` is not configured.
+- Added the `PSGALLERY_API_KEY` repository secret and reran the release workflow.
+- Verified the release workflow published to PowerShell Gallery and created the GitHub Release.
+- Verified `Find-Module -Name Win32Forge -RequiredVersion 0.1.1 -Repository PSGallery` returns `Win32Forge 0.1.1`.
