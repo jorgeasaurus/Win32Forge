@@ -545,6 +545,11 @@ section {
     align-items: start;
 }
 
+.doc-stack {
+    display: grid;
+    gap: 0.94rem;
+}
+
 .doc-card,
 .command-card,
 .callout {
@@ -582,6 +587,41 @@ section {
     color: rgba(21, 21, 21, 0.72);
     font-size: 0.78rem;
     line-height: 1.2;
+}
+
+.requirement-list {
+    display: grid;
+    gap: 0.56rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.requirement-list li {
+    display: grid;
+    grid-template-columns: minmax(7rem, 0.42fr) minmax(0, 1fr);
+    gap: 0.72rem;
+    align-items: start;
+    padding: 0.7rem 0.78rem;
+    background: rgba(139, 220, 196, 0.26);
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+}
+
+.requirement-list span {
+    font-weight: 900;
+}
+
+.requirement-list small {
+    color: rgba(21, 21, 21, 0.76);
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.requirement-list code {
+    font-size: 0.78rem;
+    font-weight: 900;
 }
 
 .command-grid {
@@ -863,6 +903,10 @@ code {
     .folder-tree li {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .requirement-list li {
+        grid-template-columns: 1fr;
     }
 }
 

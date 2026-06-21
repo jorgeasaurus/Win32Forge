@@ -10,3 +10,5 @@
 - When a user asks to redesign only one visual subsystem, preserve the surrounding layout and constrain edits to that subsystem plus direct alignment support.
 - For full-page polish passes, preserve stable anchors and copy-target IDs while tuning layout, then verify counts for interactive elements before visual signoff.
 - For responsive docs checks, use an explicit mobile viewport through DevTools or equivalent. Chrome CLI `--window-size` can crop a wider desktop layout and create misleading overflow screenshots.
+- When README examples reference a repo sample app, inspect the sample installer outputs first and make detection paths and scripts target real installed artifacts.
+- When documenting Graph-based Intune tools, include both Graph permission consent and the delegated user's Intune RBAC role; one does not replace the other.

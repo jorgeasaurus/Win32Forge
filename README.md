@@ -37,7 +37,7 @@ Win32Forge is the packaging pipeline for a Win32 app:
 
 ## Before publishing
 
-You need PowerShell 7, two helper modules, and the Intune app permission. Win32Forge works on Windows and macOS; Linux should work but is not tested yet.
+You need PowerShell 7, two helper modules, an Intune tenant, and permission to create Intune Win32 apps. Win32Forge works on Windows and macOS; Linux should work but is not tested yet.
 
 ```powershell
 Install-Module Win32Forge -Scope CurrentUser
@@ -48,19 +48,30 @@ Import-Module Win32Forge
 Install-Module Microsoft.Graph.Authentication, SvRooij.ContentPrep.Cmdlet -Scope CurrentUser
 ```
 
-Required Graph permission: `DeviceManagementApps.ReadWrite.All`.
+## Permissions and roles
+
+Win32Forge creates, uploads, updates, and optionally replaces Intune Win32 apps through Microsoft Graph.
+
+| Scenario | Required access |
+|---|---|
+| Tenant | Active Microsoft Intune license for the tenant |
+| Interactive sign-in | Microsoft Graph delegated permission `DeviceManagementApps.ReadWrite.All` with admin consent |
+| Intune admin role | Built-in `Application Manager`, `Intune Administrator`, or a custom Intune role with `Mobile apps` `Create`, `Read`, and `Update`; add `Delete` when using `-Force` |
+| App-only authentication | Microsoft Graph application permission `DeviceManagementApps.ReadWrite.All` with admin consent |
+
+For least privilege, use `Application Manager` or a custom Intune role for day-to-day publishing instead of a tenant-wide administrator role.
 
 ## Your app folder
 
-Use one source folder with the files Win32Forge needs to package and publish the app.
+Use one source folder with the files Win32Forge needs to package and publish the app. The examples below use the repo sample app.
 
 ```text
-MyApp/
-|-- install.ps1      # install command script
-|-- uninstall.ps1    # uninstall command script
-|-- detection.ps1    # default detection script
+Examples/ContosoSampleApp/
+|-- install.ps1      # creates C:\ProgramData\ContosoSampleApp
+|-- uninstall.ps1    # removes the sample app folder
+|-- detection.ps1    # checks manifest.json name and version
 |-- icon.png         # Company Portal icon
-`-- payload files    # application content
+`-- sample-app.txt   # packaged payload
 ```
 
 File names are configurable with parameters. See [Examples/ContosoSampleApp](Examples/ContosoSampleApp) for a working sample.
@@ -127,18 +138,18 @@ Publish-IntuneWin32App `
     -ClientSecret $env:INTUNE_CLIENT_SECRET
 ```
 
-### Custom scripts, icon, and output folder
+### Explicit sample scripts, icon, and output folder
 
 ```powershell
 Publish-IntuneWin32App `
-    -SourceDirectory ./MyApp `
-    -Name 'My App' `
+    -SourceDirectory ./Examples/ContosoSampleApp `
+    -Name 'Contoso Sample App' `
     -Publisher 'Contoso' `
-    -Version '2.0.0' `
-    -InstallScript 'deploy/install-myapp.ps1' `
-    -UninstallScript 'deploy/uninstall-myapp.ps1' `
-    -DetectionScript 'deploy/detect-myapp.ps1' `
-    -IconFile 'assets/myapp.png' `
+    -Version '1.0.0' `
+    -InstallScript 'install.ps1' `
+    -UninstallScript 'uninstall.ps1' `
+    -DetectionScript 'detection.ps1' `
+    -IconFile 'icon.png' `
     -OutputDirectory ./build
 ```
 
@@ -155,21 +166,9 @@ Publish-IntuneWin32App `
 
 ## Detection rules
 
-Default behavior uses `detection.ps1`. Use `-DetectionRule` when you need file system, registry, product code, PowerShell script options, or a raw Graph detection rule.
+Default behavior uses `detection.ps1`. The Contoso sample installer writes `C:\ProgramData\ContosoSampleApp\manifest.json`, and the detection examples below target that real output.
 
-### Product code detection
-
-```powershell
-Publish-IntuneWin32App `
-    -SourceDirectory ./Examples/ContosoSampleApp `
-    -Name 'Contoso Sample App' `
-    -Publisher 'Contoso' `
-    -Version '1.0.0' `
-    -DetectionRule @{
-        Type = 'ProductCode'
-        ProductCode = '{11111111-1111-1111-1111-111111111111}'
-    }
-```
+Use `-DetectionRule` when you need file system, registry, product code, PowerShell script options, or a raw Graph detection rule. Registry and product code rules are for apps that create those artifacts; the Contoso sample is file/script based.
 
 ### PowerShell script detection
 
@@ -197,14 +196,14 @@ Publish-IntuneWin32App `
     -Version '1.0.0' `
     -DetectionRule @{
         Type = 'FileSystem'
-        Path = '%ProgramFiles%\Contoso'
-        FileOrFolderName = 'Contoso.exe'
+        Path = 'C:\ProgramData\ContosoSampleApp'
+        FileOrFolderName = 'manifest.json'
         DetectionType = 'exists'
         Check32BitOn64System = $false
     }
 ```
 
-### Registry detection
+### Raw Graph file detection
 
 ```powershell
 Publish-IntuneWin32App `
@@ -213,28 +212,13 @@ Publish-IntuneWin32App `
     -Publisher 'Contoso' `
     -Version '1.0.0' `
     -DetectionRule @{
-        Type = 'Registry'
-        KeyPath = 'HKEY_LOCAL_MACHINE\Software\Contoso'
-        ValueName = 'Version'
-        DetectionType = 'version'
-        Operator = 'greaterThanOrEqual'
-        DetectionValue = '1.0.0'
-    }
-```
-
-### Raw Graph detection
-
-```powershell
-Publish-IntuneWin32App `
-    -SourceDirectory ./Examples/ContosoSampleApp `
-    -Name 'Contoso Sample App' `
-    -Publisher 'Contoso' `
-    -Version '1.0.0' `
-    -DetectionRule @{
-        '@odata.type' = '#microsoft.graph.win32LobAppProductCodeDetection'
-        productCode = '{11111111-1111-1111-1111-111111111111}'
-        productVersionOperator = 'notConfigured'
-        productVersion = ''
+        '@odata.type' = '#microsoft.graph.win32LobAppFileSystemDetection'
+        path = 'C:\ProgramData\ContosoSampleApp'
+        fileOrFolderName = 'manifest.json'
+        check32BitOn64System = $false
+        detectionType = 'exists'
+        operator = 'notConfigured'
+        detectionValue = ''
     }
 ```
 
@@ -249,17 +233,16 @@ Publish-IntuneWin32App `
     -DetectionRule @(
         @{
             Type = 'FileSystem'
-            Path = '%ProgramFiles%\Contoso'
-            FileOrFolderName = 'Contoso.exe'
+            Path = 'C:\ProgramData\ContosoSampleApp'
+            FileOrFolderName = 'manifest.json'
             DetectionType = 'exists'
+            Check32BitOn64System = $false
         }
         @{
-            Type = 'Registry'
-            KeyPath = 'HKEY_LOCAL_MACHINE\Software\Contoso'
-            ValueName = 'Version'
-            DetectionType = 'version'
-            Operator = 'greaterThanOrEqual'
-            DetectionValue = '1.0.0'
+            Type = 'PowerShellScript'
+            ScriptPath = 'detection.ps1'
+            EnforceSignatureCheck = $false
+            RunAs32Bit = $false
         }
     )
 ```

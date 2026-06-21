@@ -227,7 +227,7 @@
                     <p class="kicker">Before publishing</p>
                     <h2>Set up the module.</h2>
                 </div>
-                <p>You need PowerShell 7, two helper modules, and the Intune app permission.</p>
+                <p>You need PowerShell 7, two helper modules, an Intune tenant, and permission to create Win32 apps.</p>
             </div>
             <div class="grid-two">
                 <div class="command-grid" id="quickstart">
@@ -255,16 +255,29 @@ Import-Module Win32Forge</code></pre>
                         <pre><code id="install-helpers">Install-Module Microsoft.Graph.Authentication, SvRooij.ContentPrep.Cmdlet -Scope CurrentUser</code></pre>
                     </article>
                 </div>
-                <aside class="doc-card">
-                    <h3>Your app folder</h3>
-                    <p>Use one source folder with the files Win32Forge needs to package and publish the app.</p>
-                    <ul class="folder-tree">
-                        <li><span>install.ps1</span><small>install command script</small></li>
-                        <li><span>uninstall.ps1</span><small>uninstall command script</small></li>
-                        <li><span>detection.ps1</span><small>default detection script</small></li>
-                        <li><span>icon.png</span><small>Company Portal icon</small></li>
-                        <li><span>payload files</span><small>application content</small></li>
-                    </ul>
+                <aside class="doc-stack">
+                    <article class="doc-card">
+                        <h3>Permissions and roles</h3>
+                        <p>Graph consent gets the token. Intune RBAC decides whether the signed-in admin can manage apps.</p>
+                        <ul class="requirement-list">
+                            <li><span>Tenant</span><small>Active Microsoft Intune license</small></li>
+                            <li><span>Graph</span><small><code>DeviceManagementApps.ReadWrite.All</code> delegated or application permission with admin consent</small></li>
+                            <li><span>Delegated user</span><small><code>Application Manager</code>, <code>Intune Administrator</code>, or custom <code>Mobile apps</code> create/read/update role</small></li>
+                            <li><span>Replace mode</span><small>Add <code>Mobile apps</code> delete permission when using <code>-Force</code></small></li>
+                            <li><span>App-only</span><small>Application permission with admin consent</small></li>
+                        </ul>
+                    </article>
+                    <article class="doc-card">
+                        <h3>Your app folder</h3>
+                        <p>Use one source folder with the files Win32Forge needs to package and publish the app.</p>
+                        <ul class="folder-tree">
+                            <li><span>install.ps1</span><small>install command script</small></li>
+                            <li><span>uninstall.ps1</span><small>uninstall command script</small></li>
+                            <li><span>detection.ps1</span><small>default detection script</small></li>
+                            <li><span>icon.png</span><small>Company Portal icon</small></li>
+                            <li><span>payload files</span><small>application content</small></li>
+                        </ul>
+                    </article>
                 </aside>
             </div>
         </section>

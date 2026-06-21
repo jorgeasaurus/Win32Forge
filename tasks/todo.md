@@ -78,3 +78,29 @@
 - [x] Show the card on the website and README.
 - [x] Set the GitHub repository homepage to the Pages site.
 - [x] Verify docs references, image dimensions, and git status.
+
+## Contoso README examples
+
+- [x] Match README commands to `Examples/ContosoSampleApp`.
+- [x] Fix file and PowerShell script detection examples.
+- [x] Verify Markdown PowerShell snippets parse.
+- [x] Record the docs accuracy lesson.
+
+## Contoso README examples review
+
+- Updated the README sample tree, explicit script/icon command, and detection examples to target `Examples/ContosoSampleApp`.
+- Changed file and raw Graph detection to look for `C:\ProgramData\ContosoSampleApp\manifest.json`, which `install.ps1` creates.
+- Verified README PowerShell snippets parse and Contoso detection examples run through `Publish-IntuneWin32App -WhatIf`.
+
+## Permissions docs
+
+- [x] Confirm the module's Graph scope and Intune app operations.
+- [x] Add required permissions and roles to `README.md`.
+- [x] Add required permissions and roles to the GitHub Pages docs.
+- [x] Verify docs snippets and HTML structure.
+
+## Permissions docs review
+
+- Documented `DeviceManagementApps.ReadWrite.All` with admin consent for delegated and app-only auth.
+- Documented the Intune RBAC side: `Application Manager`, `Intune Administrator`, or a custom `Mobile apps` role with create/read/update, plus delete for `-Force`.
+- Verified README PowerShell snippets, Pages copy targets, docs references, `git diff --check`, and full local CI.
