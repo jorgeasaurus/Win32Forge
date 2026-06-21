@@ -60,5 +60,11 @@
 
 - [x] Bump manifest version and release notes to `0.1.1`.
 - [x] Verify manifest version, parser, and CI.
-- [ ] Commit, tag `v0.1.1`, and push `main` plus the tag.
-- [ ] Watch the release workflow.
+- [x] Commit, tag `v0.1.1`, and push `main` plus the tag.
+- [x] Watch the release workflow.
+
+## v0.1.1 release review
+
+- Pushed `main` and annotated tag `v0.1.1`.
+- Verified local CI, manifest version, and main CI.
+- Release workflow passed build/bootstrap/manifest validation and stopped at PowerShell Gallery publish because `PSGALLERY_API_KEY` is not configured.
