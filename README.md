@@ -15,7 +15,7 @@ Package. Publish. Deploy.
   <a href="https://www.powershellgallery.com/packages/Win32Forge"><img src="https://img.shields.io/powershellgallery/v/Win32Forge?label=PSGallery&color=blue" alt="PowerShell Gallery Version"></a>
   <a href="https://www.powershellgallery.com/packages/Win32Forge"><img src="https://img.shields.io/powershellgallery/dt/Win32Forge?label=Downloads&color=green" alt="PowerShell Gallery Downloads"></a>
   <img src="https://img.shields.io/badge/PowerShell-7.0%2B-blue?logo=powershell&logoColor=white" alt="PowerShell 7.0+">
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux%20untested-lightgrey" alt="Platform: Windows, macOS, Linux untested">
 </p>
 
 <p align="center">
@@ -37,7 +37,7 @@ Win32Forge is the packaging pipeline for a Win32 app:
 
 ## Before publishing
 
-You need PowerShell 7, two helper modules, and the Intune app permission.
+You need PowerShell 7, two helper modules, and the Intune app permission. Win32Forge works on Windows and macOS; Linux should work but is not tested yet.
 
 ```powershell
 Install-Module Win32Forge -Scope CurrentUser
