@@ -70,6 +70,13 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Bootstrap Win32Forge Dependencies
+        shell: pwsh
+        run: ./build.ps1 -Task Bootstrap
+
       - name: Download Win32Forge Module Artifact
         uses: actions/download-artifact@v4.3.0
         with:

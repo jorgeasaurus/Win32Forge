@@ -31,6 +31,7 @@
 
 - [x] Rewrite `README.md` to match the GitHub Pages tone and coverage.
 - [x] Verify README links, PowerShell examples, and release command references.
+- [x] Add IntuneHydrationKit-style status badges to `README.md`.
 
 ## Release push
 
@@ -39,3 +40,11 @@
 - [x] Commit release-ready changes.
 - [x] Tag release.
 - [x] Push `main` and release tag.
+
+## GitHub Actions follow-up
+
+- [x] Inspect failed CI, release, and Pages runs.
+- [x] Fix dependency bootstrap for GitHub-hosted runners.
+- [x] Bootstrap release job before manifest validation.
+- [x] Enable GitHub Pages configuration from the Pages workflow.
+- [x] Verify workflows and local CI.

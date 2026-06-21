@@ -6,6 +6,20 @@ Win32Forge takes an app folder, packaging scripts, and an icon, then turns them 
 
 Package. Publish. Deploy.
 
+<p align="center">
+  <a href="https://github.com/jorgeasaurus/Win32Forge/actions/workflows/ci.yml"><img src="https://github.com/jorgeasaurus/Win32Forge/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://www.powershellgallery.com/packages/Win32Forge"><img src="https://img.shields.io/powershellgallery/v/Win32Forge?label=PSGallery&color=blue" alt="PowerShell Gallery Version"></a>
+  <a href="https://www.powershellgallery.com/packages/Win32Forge"><img src="https://img.shields.io/powershellgallery/dt/Win32Forge?label=Downloads&color=green" alt="PowerShell Gallery Downloads"></a>
+  <img src="https://img.shields.io/badge/PowerShell-7.0%2B-blue?logo=powershell&logoColor=white" alt="PowerShell 7.0+">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
+</p>
+
+<p align="center">
+  <a href="https://github.com/jorgeasaurus/Win32Forge/stargazers"><img src="https://img.shields.io/github/stars/jorgeasaurus/Win32Forge?style=social" alt="GitHub Stars"></a>
+  <a href="https://github.com/jorgeasaurus/Win32Forge/commits/main"><img src="https://img.shields.io/github/last-commit/jorgeasaurus/Win32Forge" alt="Last Commit"></a>
+  <a href="https://github.com/jorgeasaurus/Win32Forge/releases/latest"><img src="https://img.shields.io/github/v/release/jorgeasaurus/Win32Forge?label=Latest%20Release" alt="Latest Release"></a>
+</p>
+
 Documentation site: <https://jorgeasaurus.github.io/Win32Forge/>
 
 ## What it handles

@@ -50,7 +50,14 @@ function Install-BuildDependency {
         }
 
         Write-Information "Installing $($module.Name) >= $($module.MinimumVersion)..."
-        Install-Module -Name $module.Name -MinimumVersion $module.MinimumVersion -Scope CurrentUser -Force -AllowClobber
+        $installPSResource = Get-Command -Name Install-PSResource -ErrorAction SilentlyContinue
+        if ($installPSResource) {
+            Install-PSResource -Name $module.Name -Version "[$($module.MinimumVersion), )" -Repository PSGallery -Scope CurrentUser -TrustRepository -AcceptLicense
+        }
+        else {
+            Install-Module -Name $module.Name -MinimumVersion $module.MinimumVersion -Repository PSGallery -Scope CurrentUser -Force -AllowClobber
+        }
+
         Write-Information "Installed $($module.Name)"
     }
 }
