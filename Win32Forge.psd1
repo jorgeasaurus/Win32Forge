@@ -1,6 +1,6 @@
 @{
     RootModule        = 'Win32Forge.psm1'
-    ModuleVersion     = '0.1.1'
+    ModuleVersion     = '0.1.2'
     GUID              = '265fb73f-40b9-43f2-8668-fb45c2684656'
     Author            = 'Jorgeasaurus'
     CompanyName       = 'Jorgeasaurus'
@@ -31,6 +31,13 @@
             Tags         = @('Intune', 'Win32', 'MicrosoftGraph', 'EndpointManager', 'PSEdition_Core')
             ProjectUri   = 'https://github.com/jorgeasaurus/Win32Forge'
             ReleaseNotes = @'
+## v0.1.2
+
+- Simplify detection-rule conversion and internal helpers; behavior is unchanged, but some validation messages are worded differently.
+- Rely on the manifest's RequiredModules instead of runtime module checks.
+- Redesign the documentation site with tabbed examples and a parameter reference.
+- Document that PowerShell script detection cannot be combined with other detection rules.
+
 ## v0.1.1
 
 - Fix GitHub-hosted dependency bootstrap for release publishing.

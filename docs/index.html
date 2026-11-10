@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0f172a">
     <meta name="description" content="Win32Forge documentation for packaging and publishing Intune Win32 apps.">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Win32Forge">
@@ -17,340 +19,260 @@
     <meta name="twitter:description" content="Package, publish, and deploy Intune Win32 apps without the maze.">
     <meta name="twitter:image" content="https://jorgeasaurus.github.io/Win32Forge/assets/win32forge-social-card.jpg">
     <title>Win32Forge Docs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <svg width="0" height="0" class="sprite" aria-hidden="true">
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+        <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+        <symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+        <symbol id="i-package" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 8.7 5 8.7-5"/></symbol>
+        <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5"/></symbol>
+        <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 13v8"/><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="m8 17 4-4 4 4"/></symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
+    </svg>
+
     <a class="skip-link" href="#main">Skip to docs</a>
-    <header class="topbar site-shell">
-        <nav class="nav" aria-label="Main navigation">
+
+    <header class="topbar">
+        <nav class="nav shell" aria-label="Main navigation">
             <a class="brand" href="#top" aria-label="Win32Forge home">
-                <span class="brand-mark" aria-hidden="true">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 8.5l7-3.8 7 3.8-7 3.8-7-3.8z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                        <path d="M5 8.5v6.7l7 4.1 7-4.1V8.5M12 12.3v7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8.2 15.3l2.1-1.2 1.8 1 2.3-1.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </span>
+                <svg class="icon brand-mark" aria-hidden="true"><use href="#i-package"/></svg>
                 <span>Win32Forge</span>
             </a>
             <div class="nav-links">
                 <a href="#explain">Overview</a>
                 <a href="#setup">Setup</a>
                 <a href="#publish">Publish</a>
-                <a href="https://github.com/jorgeasaurus/Win32Forge">GitHub</a>
+                <a href="#parameters">Parameters</a>
+                <a class="nav-github" href="https://github.com/jorgeasaurus/Win32Forge">
+                    <svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>
+                    <span>GitHub</span>
+                </a>
             </div>
         </nav>
     </header>
 
     <main id="main">
-        <section class="hero site-shell" id="top">
-            <div>
-                <p class="kicker">Intune Win32 apps, without the maze</p>
-                <h1>Win32Forge</h1>
-                <p class="hero-copy">
-                    Win32Forge takes an app folder, packaging scripts, and an icon, then turns them into a ready-to-upload
-                    <strong>.intunewin package</strong> with the Intune metadata wired in.
+        <section class="hero shell" id="top">
+            <div class="hero-copy">
+                <p class="eyebrow">PowerShell module for Microsoft Intune</p>
+                <h1>Ship Win32 apps to Intune with one command.</h1>
+                <p class="lede">
+                    Point Win32Forge at an app folder. It builds the <code>.intunewin</code> package, adds the
+                    Intune metadata and detection rules, and uploads it through Microsoft Graph.
                 </p>
-                <div class="hero-actions" aria-label="Primary actions">
+                <div class="hero-actions">
                     <a class="button primary" href="#quickstart">
-                        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
                         Quickstart
+                        <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg>
                     </a>
-                    <a class="button" href="#publish">
-                        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        See commands
-                    </a>
+                    <a class="button" href="#publish">See examples</a>
                 </div>
+                <ul class="badges" aria-label="Requirements">
+                    <li>PowerShell 7+</li>
+                    <li>Windows, macOS, Linux</li>
+                    <li>PowerShell Gallery</li>
+                </ul>
             </div>
 
-            <aside class="forge-card" aria-label="Win32Forge packaging diagram">
-                <div class="forge-board">
-                    <div class="board-title">
-                        <span class="board-brand">
-                            <strong>Win32Forge</strong>
-                            <small>Forge floor</small>
-                        </span>
-                        <span class="status-light">Ready</span>
-                    </div>
-                    <div class="machine">
-                        <svg class="flow-art" viewBox="0 0 560 330" role="img" aria-label="A workflow from source files to an intunewin package to Graph upload to an Intune app">
-                            <defs>
-                                <filter id="hardShadow" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feDropShadow dx="5" dy="6" stdDeviation="0" flood-color="#151515" flood-opacity="1"/>
-                                </filter>
-                                <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-                                    <path d="M1 1l8 4-8 4z" fill="#0078d4"/>
-                                </marker>
-                            </defs>
-                            <path d="M128 166h22" stroke="#0078d4" stroke-width="6" stroke-linecap="round" marker-end="url(#arrowHead)"/>
-                            <path d="M270 166h18" stroke="#0078d4" stroke-width="6" stroke-linecap="round" marker-end="url(#arrowHead)"/>
-                            <path d="M414 166h20" stroke="#0078d4" stroke-width="6" stroke-linecap="round" marker-end="url(#arrowHead)"/>
-
-                            <g filter="url(#hardShadow)">
-                                <path d="M21 128h31l12-16h49c8 0 14 6 14 14v78c0 8-6 14-14 14H21c-8 0-14-6-14-14v-62c0-8 6-14 14-14z" fill="#f8cf45" stroke="#151515" stroke-width="5" stroke-linejoin="round"/>
-                                <path d="M22 145h88" stroke="#151515" stroke-width="5" stroke-linecap="round"/>
-                                <text x="39" y="187" fill="#151515" font-family="Nunito, Verdana" font-size="28" font-weight="900">{}</text>
-                                <path d="M64 201h38" stroke="#151515" stroke-width="5" stroke-linecap="round"/>
-                            </g>
-
-                            <g class="flow-package" filter="url(#hardShadow)">
-                                <path d="M154 105h86l28 28v88H154z" fill="#fffdf7" stroke="#151515" stroke-width="5" stroke-linejoin="round"/>
-                                <path d="M240 105v30h28" fill="none" stroke="#151515" stroke-width="5" stroke-linejoin="round"/>
-                                <text x="166" y="143" fill="#151515" font-family="Nunito, Verdana" font-size="14" font-weight="900">.intunewin</text>
-                                <rect x="176" y="156" width="60" height="46" rx="9" fill="#7ddfbe" stroke="#151515" stroke-width="5"/>
-                                <path d="M176 175h60" stroke="#151515" stroke-width="5"/>
-                                <path d="M246 149v58" stroke="#151515" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1 8"/>
-                            </g>
-
-                            <g filter="url(#hardShadow)">
-                                <rect x="152" y="235" width="128" height="28" rx="10" fill="#151515"/>
-                                <text x="174" y="254" fill="#fffdf7" font-family="Nunito, Verdana" font-size="10.5" font-weight="900">Metadata + rules</text>
-                            </g>
-
-                            <g filter="url(#hardShadow)">
-                                <circle cx="350" cy="166" r="54" fill="#f4fbff" stroke="#151515" stroke-width="5"/>
-                                <path d="M350 138l-28 28M350 138l34 21M322 166l31 28M384 159l-31 35" stroke="#151515" stroke-width="4" stroke-linecap="round"/>
-                                <circle cx="350" cy="138" r="13" fill="#38bdf8" stroke="#151515" stroke-width="4"/>
-                                <circle cx="322" cy="166" r="11" fill="#8bdcc4" stroke="#151515" stroke-width="4"/>
-                                <circle cx="384" cy="159" r="11" fill="#f8cf45" stroke="#151515" stroke-width="4"/>
-                                <circle cx="353" cy="194" r="11" fill="#2563eb" stroke="#151515" stroke-width="4"/>
-                                <rect x="329" y="164" width="43" height="19" rx="8" fill="#fffdf7" stroke="#151515" stroke-width="3.5"/>
-                                <text x="339" y="178" fill="#151515" font-family="Nunito, Verdana" font-size="10.5" font-weight="900">API</text>
-                            </g>
-
-                            <g filter="url(#hardShadow)">
-                                <rect x="438" y="114" width="104" height="104" rx="18" fill="#2563eb" stroke="#151515" stroke-width="5"/>
-                                <rect x="457" y="135" width="66" height="54" rx="10" fill="#fffdf7" stroke="#151515" stroke-width="4.5"/>
-                                <path d="M457 150h66" stroke="#151515" stroke-width="4.5" stroke-linecap="round"/>
-                                <rect x="466" y="159" width="18" height="18" rx="4" fill="#8bdcc4" stroke="#151515" stroke-width="3.5"/>
-                                <rect x="492" y="159" width="21" height="18" rx="4" fill="#f8cf45" stroke="#151515" stroke-width="3.5"/>
-                                <path d="M473 199h34M490 190v9" stroke="#151515" stroke-width="4" stroke-linecap="round"/>
-                                <circle cx="518" cy="198" r="19" fill="#8bdcc4" stroke="#151515" stroke-width="4"/>
-                                <path d="M508 198l8 8 15-20" fill="none" stroke="#151515" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </g>
-
-                            <circle class="spark" cx="151" cy="116" r="5.5" fill="#f8cf45" stroke="#151515" stroke-width="3.5"/>
-                            <circle class="spark" cx="302" cy="125" r="5.5" fill="#8bdcc4" stroke="#151515" stroke-width="3.5"/>
-                            <circle class="spark" cx="418" cy="124" r="5" fill="#38bdf8" stroke="#151515" stroke-width="3.5"/>
-                            <circle class="spark" cx="526" cy="235" r="5.5" fill="#8bdcc4" stroke="#151515" stroke-width="3.5"/>
-                        </svg>
-                        <div class="belt" aria-label="Packaging progress">
-                            <span>Files</span>
-                            <span>.intunewin</span>
-                            <span>Graph</span>
-                            <span>Intune</span>
-                        </div>
-                        <div class="card-tagline">Package. Publish. Deploy.</div>
-                    </div>
+            <figure class="terminal" aria-label="Example publish command and its result">
+                <div class="terminal-bar" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                    <small>pwsh</small>
                 </div>
-            </aside>
-        </section>
-
-        <section class="social-preview site-shell" aria-labelledby="social-preview-title">
-            <div class="social-preview-copy">
-                <p class="kicker">Forge floor card</p>
-                <h2 id="social-preview-title">The full pipeline at a glance.</h2>
-            </div>
-            <figure class="social-card-frame">
-                <img src="assets/win32forge-social-card.jpg" width="1280" height="640" alt="Win32Forge social card showing source folder, .intunewin package, metadata, Graph API, and Intune deployment steps.">
-            </figure>
-        </section>
-
-        <section class="site-shell" id="explain">
-            <div class="section-head">
-                <div>
-                    <p class="kicker">Plain-language overview</p>
-                    <h2>What does it handle?</h2>
-                </div>
-                <p>It handles the repeatable packaging and Microsoft Graph upload work between your source folder and Intune.</p>
-            </div>
-            <div class="steps">
-                <article class="step-card" data-step="1">
-                    <span class="step-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M3 8h6l2-2h10v13H3z" fill="#f8cf45" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-                            <path d="M8 13l-2 2 2 2M16 13l2 2-2 2" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
-                    <span class="step-pill">Step one</span>
-                    <h3>Prepare the folder</h3>
-                    <p>Keep the app payload, install script, uninstall script, detection rule, and icon together.</p>
-                </article>
-                <article class="step-card" data-step="2">
-                    <span class="step-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M6 3h9l3 3v15H6z" fill="#fffdf8" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-                            <path d="M15 3v4h4" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-                            <rect x="8.5" y="12" width="7" height="5" rx="1.4" fill="#8bdcc4" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                    </span>
-                    <span class="step-pill">Step two</span>
-                    <h3>Create the package</h3>
-                    <p>Win32Forge builds the `.intunewin` package Intune expects.</p>
-                </article>
-                <article class="step-card" data-step="3">
-                    <span class="step-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M12 3l8 5v8l-8 5-8-5V8z" fill="#fffdf8" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                            <path d="M12 8v5m0 0l-4 3m4-3l4 3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-                            <circle cx="12" cy="8" r="2" fill="#38bdf8" stroke="currentColor" stroke-width="1.8"/>
-                            <circle cx="8" cy="16" r="2" fill="#8bdcc4" stroke="currentColor" stroke-width="1.8"/>
-                            <circle cx="16" cy="16" r="2" fill="#f8cf45" stroke="currentColor" stroke-width="1.8"/>
-                        </svg>
-                    </span>
-                    <span class="step-pill">Step three</span>
-                    <h3>Add the metadata</h3>
-                    <p>It adds the app name, publisher, version, install command, uninstall command, and detection rule.</p>
-                </article>
-                <article class="step-card" data-step="4">
-                    <span class="step-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <rect x="4" y="4" width="16" height="16" rx="4" fill="#2563eb" stroke="currentColor" stroke-width="2.4"/>
-                            <path d="M8 10h8M8 14h5" stroke="#fffdf8" stroke-width="2.3" stroke-linecap="round"/>
-                            <path d="M9 17l2 2 4-6" stroke="#fffdf8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
-                    <span class="step-pill">Step four</span>
-                    <h3>Publish to Intune</h3>
-                    <p>It uploads the package through Microsoft Graph so the app shows up as a Win32 app.</p>
-                </article>
-            </div>
-        </section>
-
-        <section class="site-shell" id="setup">
-            <div class="section-head">
-                <div>
-                    <p class="kicker">Before publishing</p>
-                    <h2>Set up the module.</h2>
-                </div>
-                <p>You need PowerShell 7, two helper modules, an Intune tenant, and permission to create Win32 apps.</p>
-            </div>
-            <div class="grid-two">
-                <div class="command-grid" id="quickstart">
-                    <article class="command-card">
-                        <div class="command-top">
-                            <strong>Install Win32Forge</strong>
-                            <button class="copy-button" type="button" data-copy="install-module" aria-label="Copy install command">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M8 8h10v12H8zM6 16H4V4h12v2" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                        </div>
-                        <pre><code id="install-module">Install-Module Win32Forge -Scope CurrentUser
-Import-Module Win32Forge</code></pre>
-                    </article>
-                    <article class="command-card">
-                        <div class="command-top">
-                            <strong>Install helpers</strong>
-                            <button class="copy-button" type="button" data-copy="install-helpers" aria-label="Copy helper install command">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M8 8h10v12H8zM6 16H4V4h12v2" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                        </div>
-                        <pre><code id="install-helpers">Install-Module Microsoft.Graph.Authentication, SvRooij.ContentPrep.Cmdlet -Scope CurrentUser</code></pre>
-                    </article>
-                </div>
-                <aside class="doc-stack">
-                    <article class="doc-card">
-                        <h3>Permissions and roles</h3>
-                        <p>Graph consent gets the token. Intune RBAC decides whether the signed-in admin can manage apps.</p>
-                        <ul class="requirement-list">
-                            <li><span>Tenant</span><small>Active Microsoft Intune license</small></li>
-                            <li><span>Graph</span><small><code>DeviceManagementApps.ReadWrite.All</code> delegated or application permission with admin consent</small></li>
-                            <li><span>Delegated user</span><small><code>Application Manager</code>, <code>Intune Administrator</code>, or custom <code>Mobile apps</code> create/read/update role</small></li>
-                            <li><span>Replace mode</span><small>Add <code>Mobile apps</code> delete permission when using <code>-Force</code></small></li>
-                            <li><span>App-only</span><small>Application permission with admin consent</small></li>
-                        </ul>
-                    </article>
-                    <article class="doc-card">
-                        <h3>Your app folder</h3>
-                        <p>Use one source folder with the files Win32Forge needs to package and publish the app.</p>
-                        <ul class="folder-tree">
-                            <li><span>install.ps1</span><small>install command script</small></li>
-                            <li><span>uninstall.ps1</span><small>uninstall command script</small></li>
-                            <li><span>detection.ps1</span><small>default detection script</small></li>
-                            <li><span>icon.png</span><small>Company Portal icon</small></li>
-                            <li><span>payload files</span><small>application content</small></li>
-                        </ul>
-                    </article>
-                </aside>
-            </div>
-        </section>
-
-        <section class="site-shell" id="publish">
-            <div class="section-head">
-                <div>
-                    <p class="kicker">Publish an app</p>
-                    <h2>Run the publish command.</h2>
-                </div>
-                <p>Use `-WhatIf` for a dry run. Use `-Force` when replacing an existing app with the same display name.</p>
-            </div>
-            <div class="command-grid">
-                <article class="command-card">
-                    <div class="command-top">
-                        <strong>Interactive sign-in</strong>
-                        <button class="copy-button" type="button" data-copy="publish-basic" aria-label="Copy publish command">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M8 8h10v12H8zM6 16H4V4h12v2" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <pre><code id="publish-basic">Publish-IntuneWin32App `
+                <pre class="terminal-body"><code class="language-powershell">Publish-IntuneWin32App `
     -SourceDirectory ./Examples/ContosoSampleApp `
     -Name 'Contoso Sample App' `
     -Publisher 'Contoso' `
     -Version '1.0.0'</code></pre>
+                <dl class="terminal-output">
+                    <div><dt>DisplayName</dt><dd>Contoso Sample App</dd></div>
+                    <div><dt>Version</dt><dd>1.0.0</dd></div>
+                    <div><dt>PackagePath</dt><dd>…/Win32Forge/install.intunewin</dd></div>
+                    <div><dt>Id</dt><dd>&lt;new Intune app id&gt;</dd></div>
+                </dl>
+            </figure>
+        </section>
+
+        <section class="section shell" id="explain" aria-labelledby="explain-title">
+            <div class="section-head">
+                <p class="eyebrow">Overview</p>
+                <h2 id="explain-title">What it handles</h2>
+                <p>The packaging and Graph upload work between your source folder and a Win32 app in Intune.</p>
+            </div>
+            <ol class="pipeline">
+                <li>
+                    <svg class="icon step-icon" aria-hidden="true"><use href="#i-folder"/></svg>
+                    <h3>Prepare the folder</h3>
+                    <p>Keep the payload, install and uninstall scripts, detection script, and icon together.</p>
+                </li>
+                <li>
+                    <svg class="icon step-icon" aria-hidden="true"><use href="#i-package"/></svg>
+                    <h3>Build the package</h3>
+                    <p>Win32Forge creates the encrypted <code>.intunewin</code> file Intune expects.</p>
+                </li>
+                <li>
+                    <svg class="icon step-icon" aria-hidden="true"><use href="#i-tag"/></svg>
+                    <h3>Add the metadata</h3>
+                    <p>Name, publisher, version, install and uninstall commands, return codes, and detection rules.</p>
+                </li>
+                <li>
+                    <svg class="icon step-icon" aria-hidden="true"><use href="#i-upload"/></svg>
+                    <h3>Publish to Intune</h3>
+                    <p>Uploads and commits the content through Microsoft Graph, so the app appears as a Win32 app.</p>
+                </li>
+            </ol>
+        </section>
+
+        <section class="section shell" id="setup" aria-labelledby="setup-title">
+            <div class="section-head">
+                <p class="eyebrow">Setup</p>
+                <h2 id="setup-title">Install and prepare</h2>
+                <p>You need PowerShell 7, two helper modules, an Intune tenant, and permission to create Win32 apps.</p>
+            </div>
+
+            <div class="setup-grid">
+                <div class="stack" id="quickstart">
+                    <article class="code-card">
+                        <header class="code-head">
+                            <h3>1. Install Win32Forge</h3>
+                            <button class="copy-button" type="button" data-copy="install-module">
+                                <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg>
+                                <span>Copy</span>
+                            </button>
+                        </header>
+                        <pre><code class="language-powershell" id="install-module">Install-Module Win32Forge -Scope CurrentUser
+Import-Module Win32Forge</code></pre>
+                    </article>
+                    <article class="code-card">
+                        <header class="code-head">
+                            <h3>2. Install helper modules</h3>
+                            <button class="copy-button" type="button" data-copy="install-helpers">
+                                <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg>
+                                <span>Copy</span>
+                            </button>
+                        </header>
+                        <pre><code class="language-powershell" id="install-helpers">Install-Module Microsoft.Graph.Authentication, SvRooij.ContentPrep.Cmdlet -Scope CurrentUser</code></pre>
+                    </article>
+
+                    <article class="panel">
+                        <h3>3. Lay out the app folder</h3>
+                        <ul class="file-list">
+                            <li><code>install.ps1</code><span>Install command script</span></li>
+                            <li><code>uninstall.ps1</code><span>Uninstall command script</span></li>
+                            <li><code>detection.ps1</code><span>Default detection script</span></li>
+                            <li><code>icon.png</code><span>Company Portal icon (PNG or JPG)</span></li>
+                            <li><code>…</code><span>Your application payload</span></li>
+                        </ul>
+                    </article>
+                </div>
+
+                <article class="panel">
+                    <h3>
+                        <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>
+                        Permissions and roles
+                    </h3>
+                    <p>Graph consent gets the token. Intune RBAC decides whether the signed-in admin can manage apps. You need both.</p>
+                    <dl class="req-list">
+                        <div><dt>Tenant</dt><dd>An active Microsoft Intune license.</dd></div>
+                        <div><dt>Graph</dt><dd><code>DeviceManagementApps.ReadWrite.All</code>, delegated or application, with admin consent.</dd></div>
+                        <div><dt>Delegated user</dt><dd><code>Application Manager</code>, <code>Intune Administrator</code>, or a custom role with <code>Mobile apps</code> create, read, and update.</dd></div>
+                        <div><dt>Replace mode</dt><dd>Add <code>Mobile apps</code> delete when you use <code>-Force</code>.</dd></div>
+                        <div><dt>App-only</dt><dd>The application permission with admin consent.</dd></div>
+                    </dl>
                 </article>
-                <article class="command-card">
-                    <div class="command-top">
-                        <strong>Dry run</strong>
-                        <button class="copy-button" type="button" data-copy="publish-dryrun" aria-label="Copy dry-run command">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M8 8h10v12H8zM6 16H4V4h12v2" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <pre><code id="publish-dryrun">Publish-IntuneWin32App `
+            </div>
+        </section>
+
+        <section class="section shell" id="publish" aria-labelledby="publish-title">
+            <div class="section-head">
+                <p class="eyebrow">Publish</p>
+                <h2 id="publish-title">Run the publish command</h2>
+                <p>Use <code>-WhatIf</code> for a dry run. Use <code>-Force</code> to replace an existing app with the same display name.</p>
+            </div>
+
+            <div class="tabs" data-tabs>
+                <h3 class="tabs-title">Sign-in and run mode</h3>
+                <div class="tab-list" role="tablist" aria-label="Run mode examples">
+                    <button role="tab" type="button" id="tab-basic" aria-controls="panel-basic">Interactive</button>
+                    <button role="tab" type="button" id="tab-dryrun" aria-controls="panel-dryrun">Dry run</button>
+                    <button role="tab" type="button" id="tab-force" aria-controls="panel-force">Replace existing</button>
+                    <button role="tab" type="button" id="tab-apponly" aria-controls="panel-apponly">App-only</button>
+                </div>
+                <div class="code-card tab-panel" role="tabpanel" id="panel-basic" aria-labelledby="tab-basic">
+                    <header class="code-head">
+                        <p>Opens a browser sign-in and uses <code>detection.ps1</code> as the detection rule.</p>
+                        <button class="copy-button" type="button" data-copy="publish-basic"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                    </header>
+                    <pre><code class="language-powershell" id="publish-basic">Publish-IntuneWin32App `
+    -SourceDirectory ./Examples/ContosoSampleApp `
+    -Name 'Contoso Sample App' `
+    -Publisher 'Contoso' `
+    -Version '1.0.0'</code></pre>
+                </div>
+                <div class="code-card tab-panel" role="tabpanel" id="panel-dryrun" aria-labelledby="tab-dryrun">
+                    <header class="code-head">
+                        <p>Checks the folder and files without packaging, signing in, or uploading.</p>
+                        <button class="copy-button" type="button" data-copy="publish-dryrun"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                    </header>
+                    <pre><code class="language-powershell" id="publish-dryrun">Publish-IntuneWin32App `
     -SourceDirectory ./Examples/ContosoSampleApp `
     -Name 'Contoso Sample App' `
     -Publisher 'Contoso' `
     -Version '1.0.0' `
     -WhatIf</code></pre>
-                </article>
-                <article class="command-card">
-                    <div class="command-top">
-                        <strong>Product code detection</strong>
-                        <button class="copy-button" type="button" data-copy="publish-product-code" aria-label="Copy product-code detection command">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M8 8h10v12H8zM6 16H4V4h12v2" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <pre><code id="publish-product-code">Publish-IntuneWin32App `
+                </div>
+                <div class="code-card tab-panel" role="tabpanel" id="panel-force" aria-labelledby="tab-force">
+                    <header class="code-head">
+                        <p>Deletes any Win32 app with the same display name, then uploads the new one.</p>
+                        <button class="copy-button" type="button" data-copy="publish-force"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                    </header>
+                    <pre><code class="language-powershell" id="publish-force">Publish-IntuneWin32App `
+    -SourceDirectory ./Examples/ContosoSampleApp `
+    -Name 'Contoso Sample App' `
+    -Publisher 'Contoso' `
+    -Version '1.0.1' `
+    -Force</code></pre>
+                </div>
+                <div class="code-card tab-panel" role="tabpanel" id="panel-apponly" aria-labelledby="tab-apponly">
+                    <header class="code-head">
+                        <p><code>TenantId</code>, <code>ClientId</code>, and <code>ClientSecret</code> are required together.</p>
+                        <button class="copy-button" type="button" data-copy="publish-app-only"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                    </header>
+                    <pre><code class="language-powershell" id="publish-app-only">Publish-IntuneWin32App `
     -SourceDirectory ./Examples/ContosoSampleApp `
     -Name 'Contoso Sample App' `
     -Publisher 'Contoso' `
     -Version '1.0.0' `
-    -DetectionRule @{
-        Type = 'ProductCode'
-        ProductCode = '{11111111-1111-1111-1111-111111111111}'
-    }</code></pre>
-                </article>
-                <article class="command-card">
-                    <div class="command-top">
-                        <strong>PowerShell script detection</strong>
-                        <button class="copy-button" type="button" data-copy="publish-script-rule" aria-label="Copy PowerShell script detection command">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M8 8h10v12H8zM6 16H4V4h12v2" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <pre><code id="publish-script-rule">Publish-IntuneWin32App `
+    -TenantId '00000000-0000-0000-0000-000000000000' `
+    -ClientId '11111111-1111-1111-1111-111111111111' `
+    -ClientSecret $env:INTUNE_CLIENT_SECRET</code></pre>
+                </div>
+            </div>
+
+            <div class="tabs" data-tabs>
+                <h3 class="tabs-title">Detection rules</h3>
+                <p class="tabs-note">Without <code>-DetectionRule</code>, Win32Forge uses <code>detection.ps1</code>. Pass one rule or an array of rules.</p>
+                <div class="tab-list" role="tablist" aria-label="Detection rule examples">
+                    <button role="tab" type="button" id="tab-script" aria-controls="panel-script">Script</button>
+                    <button role="tab" type="button" id="tab-file" aria-controls="panel-file">File system</button>
+                    <button role="tab" type="button" id="tab-registry" aria-controls="panel-registry">Registry</button>
+                    <button role="tab" type="button" id="tab-product" aria-controls="panel-product">Product code</button>
+                    <button role="tab" type="button" id="tab-raw" aria-controls="panel-raw">Raw Graph</button>
+                    <button role="tab" type="button" id="tab-multi" aria-controls="panel-multi">Multiple</button>
+                </div>
+                <div class="code-card tab-panel" role="tabpanel" id="panel-script" aria-labelledby="tab-script">
+                    <header class="code-head">
+                        <p>Runs a PowerShell script on the device. Options default to <code>$false</code>.</p>
+                        <button class="copy-button" type="button" data-copy="publish-script-rule"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                    </header>
+                    <pre><code class="language-powershell" id="publish-script-rule">Publish-IntuneWin32App `
     -SourceDirectory ./Examples/ContosoSampleApp `
     -Name 'Contoso Sample App' `
     -Publisher 'Contoso' `
@@ -361,41 +283,33 @@ Import-Module Win32Forge</code></pre>
         EnforceSignatureCheck = $false
         RunAs32Bit = $false
     }</code></pre>
-                </article>
-                <article class="command-card">
-                    <div class="command-top">
-                        <strong>File system detection</strong>
-                        <button class="copy-button" type="button" data-copy="publish-file-rule" aria-label="Copy file system detection command">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M8 8h10v12H8zM6 16H4V4h12v2" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <pre><code id="publish-file-rule">Publish-IntuneWin32App `
+                </div>
+                <div class="code-card tab-panel" role="tabpanel" id="panel-file" aria-labelledby="tab-file">
+                    <header class="code-head">
+                        <p>Targets the manifest the Contoso sample installer writes.</p>
+                        <button class="copy-button" type="button" data-copy="publish-file-rule"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                    </header>
+                    <pre><code class="language-powershell" id="publish-file-rule">Publish-IntuneWin32App `
     -SourceDirectory ./Examples/ContosoSampleApp `
     -Name 'Contoso Sample App' `
     -Publisher 'Contoso' `
     -Version '1.0.0' `
     -DetectionRule @{
         Type = 'FileSystem'
-        Path = '%ProgramFiles%\Contoso'
-        FileOrFolderName = 'Contoso.exe'
+        Path = 'C:\ProgramData\ContosoSampleApp'
+        FileOrFolderName = 'manifest.json'
         DetectionType = 'exists'
         Check32BitOn64System = $false
     }</code></pre>
-                </article>
-                <article class="command-card">
-                    <div class="command-top">
-                        <strong>Registry detection</strong>
-                        <button class="copy-button" type="button" data-copy="publish-registry-rule" aria-label="Copy registry detection command">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M8 8h10v12H8zM6 16H4V4h12v2" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <pre><code id="publish-registry-rule">Publish-IntuneWin32App `
-    -SourceDirectory ./Examples/ContosoSampleApp `
-    -Name 'Contoso Sample App' `
+                </div>
+                <div class="code-card tab-panel" role="tabpanel" id="panel-registry" aria-labelledby="tab-registry">
+                    <header class="code-head">
+                        <p>For apps that write a registry value. The Contoso sample does not.</p>
+                        <button class="copy-button" type="button" data-copy="publish-registry-rule"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                    </header>
+                    <pre><code class="language-powershell" id="publish-registry-rule">Publish-IntuneWin32App `
+    -SourceDirectory ./MyApp `
+    -Name 'Contoso Tool' `
     -Publisher 'Contoso' `
     -Version '1.0.0' `
     -DetectionRule @{
@@ -406,38 +320,48 @@ Import-Module Win32Forge</code></pre>
         Operator = 'greaterThanOrEqual'
         DetectionValue = '1.0.0'
     }</code></pre>
-                </article>
-                <article class="command-card">
-                    <div class="command-top">
-                        <strong>Raw Graph detection</strong>
-                        <button class="copy-button" type="button" data-copy="publish-raw-rule" aria-label="Copy raw Graph detection command">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M8 8h10v12H8zM6 16H4V4h12v2" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <pre><code id="publish-raw-rule">Publish-IntuneWin32App `
+                </div>
+                <div class="code-card tab-panel" role="tabpanel" id="panel-product" aria-labelledby="tab-product">
+                    <header class="code-head">
+                        <p>For MSI-based apps. Version operator and version are optional.</p>
+                        <button class="copy-button" type="button" data-copy="publish-product-code"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                    </header>
+                    <pre><code class="language-powershell" id="publish-product-code">Publish-IntuneWin32App `
+    -SourceDirectory ./MyMsiApp `
+    -Name 'Contoso Tool' `
+    -Publisher 'Contoso' `
+    -Version '1.0.0' `
+    -DetectionRule @{
+        Type = 'ProductCode'
+        ProductCode = '{11111111-1111-1111-1111-111111111111}'
+    }</code></pre>
+                </div>
+                <div class="code-card tab-panel" role="tabpanel" id="panel-raw" aria-labelledby="tab-raw">
+                    <header class="code-head">
+                        <p>Any hashtable with <code>@odata.type</code> is sent to Graph unchanged.</p>
+                        <button class="copy-button" type="button" data-copy="publish-raw-rule"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                    </header>
+                    <pre><code class="language-powershell" id="publish-raw-rule">Publish-IntuneWin32App `
     -SourceDirectory ./Examples/ContosoSampleApp `
     -Name 'Contoso Sample App' `
     -Publisher 'Contoso' `
     -Version '1.0.0' `
     -DetectionRule @{
-        '@odata.type' = '#microsoft.graph.win32LobAppProductCodeDetection'
-        productCode = '{11111111-1111-1111-1111-111111111111}'
-        productVersionOperator = 'notConfigured'
-        productVersion = ''
+        '@odata.type' = '#microsoft.graph.win32LobAppFileSystemDetection'
+        path = 'C:\ProgramData\ContosoSampleApp'
+        fileOrFolderName = 'manifest.json'
+        check32BitOn64System = $false
+        detectionType = 'exists'
+        operator = 'notConfigured'
+        detectionValue = ''
     }</code></pre>
-                </article>
-                <article class="command-card">
-                    <div class="command-top">
-                        <strong>Multiple detection rules</strong>
-                        <button class="copy-button" type="button" data-copy="publish-multi-rule" aria-label="Copy multiple detection rules command">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M8 8h10v12H8zM6 16H4V4h12v2" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <pre><code id="publish-multi-rule">Publish-IntuneWin32App `
+                </div>
+                <div class="code-card tab-panel" role="tabpanel" id="panel-multi" aria-labelledby="tab-multi">
+                    <header class="code-head">
+                        <p>Every rule must match. Combine file, registry, or product code rules; a script rule must stand alone.</p>
+                        <button class="copy-button" type="button" data-copy="publish-multi-rule"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                    </header>
+                    <pre><code class="language-powershell" id="publish-multi-rule">Publish-IntuneWin32App `
     -SourceDirectory ./Examples/ContosoSampleApp `
     -Name 'Contoso Sample App' `
     -Publisher 'Contoso' `
@@ -445,41 +369,71 @@ Import-Module Win32Forge</code></pre>
     -DetectionRule @(
         @{
             Type = 'FileSystem'
-            Path = '%ProgramFiles%\Contoso'
-            FileOrFolderName = 'Contoso.exe'
+            Path = 'C:\ProgramData\ContosoSampleApp'
+            FileOrFolderName = 'manifest.json'
             DetectionType = 'exists'
         }
         @{
-            Type = 'Registry'
-            KeyPath = 'HKEY_LOCAL_MACHINE\Software\Contoso'
-            ValueName = 'Version'
-            DetectionType = 'version'
-            Operator = 'greaterThanOrEqual'
-            DetectionValue = '1.0.0'
+            Type = 'FileSystem'
+            Path = 'C:\ProgramData\ContosoSampleApp'
+            FileOrFolderName = 'sample-app.txt'
+            DetectionType = 'exists'
         }
     )</code></pre>
-                </article>
+                </div>
             </div>
         </section>
 
-        <section class="site-shell">
-            <div class="callout">
-                <span class="callout-mark" aria-hidden="true">i</span>
-                <div>
-                    <h3>GitHub Pages setup</h3>
-                    <p>The page lives in `docs/index.html`. The `Deploy GitHub Pages` workflow publishes that folder when docs change on `main`.</p>
-                </div>
+        <section class="section shell" id="parameters" aria-labelledby="parameters-title">
+            <div class="section-head">
+                <p class="eyebrow">Reference</p>
+                <h2 id="parameters-title">Parameters</h2>
+                <p>Returns an object with <code>DisplayName</code>, <code>Id</code>, <code>Version</code>, <code>PackagePath</code>, and <code>TenantId</code>.</p>
+            </div>
+            <div class="table-wrap" tabindex="0" role="region" aria-label="Publish-IntuneWin32App parameters">
+                <table>
+                    <thead>
+                        <tr><th scope="col">Parameter</th><th scope="col">Default</th><th scope="col">Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>SourceDirectory</code><span class="req">Required</span></td><td>–</td><td>Folder containing the app payload and scripts.</td></tr>
+                        <tr><td><code>Name</code><span class="req">Required</span></td><td>–</td><td>Intune display name.</td></tr>
+                        <tr><td><code>Publisher</code><span class="req">Required</span></td><td>–</td><td>Publisher name.</td></tr>
+                        <tr><td><code>Version</code><span class="req">Required</span></td><td>–</td><td>App version string.</td></tr>
+                        <tr><td><code>Developer</code></td><td><code>Publisher</code></td><td>Developer name shown in Intune.</td></tr>
+                        <tr><td><code>InstallScript</code></td><td><code>install.ps1</code></td><td>Install script, relative to the source folder.</td></tr>
+                        <tr><td><code>UninstallScript</code></td><td><code>uninstall.ps1</code></td><td>Uninstall script.</td></tr>
+                        <tr><td><code>DetectionScript</code></td><td><code>detection.ps1</code></td><td>Script used when no <code>DetectionRule</code> is given.</td></tr>
+                        <tr><td><code>DetectionRule</code></td><td>–</td><td>One or more rules: <code>PowerShellScript</code>, <code>FileSystem</code>, <code>Registry</code>, <code>ProductCode</code>, or raw Graph.</td></tr>
+                        <tr><td><code>IconFile</code></td><td><code>icon.png</code></td><td>Company Portal icon, PNG or JPG.</td></tr>
+                        <tr><td><code>OutputDirectory</code></td><td>temp folder</td><td>Where the <code>.intunewin</code> package is written.</td></tr>
+                        <tr><td><code>TenantId</code></td><td>–</td><td>Entra tenant ID. Required with <code>ClientId</code> and <code>ClientSecret</code>.</td></tr>
+                        <tr><td><code>ClientId</code></td><td>–</td><td>App registration ID for app-only sign-in.</td></tr>
+                        <tr><td><code>ClientSecret</code></td><td>–</td><td>Client secret for app-only sign-in.</td></tr>
+                        <tr><td><code>Force</code></td><td>–</td><td>Delete and replace an existing app with the same name.</td></tr>
+                        <tr><td><code>KeepConnected</code></td><td>–</td><td>Skip <code>Disconnect-MgGraph</code> when finished.</td></tr>
+                        <tr><td><code>WhatIf</code></td><td>–</td><td>Validate inputs without packaging or uploading.</td></tr>
+                    </tbody>
+                </table>
             </div>
         </section>
     </main>
 
-    <footer class="footer site-shell">
-        <div class="footer-inner">
-            <span>Win32Forge: package and publish Intune Win32 apps from PowerShell.</span>
-            <a href="#top" aria-label="Back to top of page">Back to top</a>
+    <footer class="footer">
+        <div class="shell footer-inner">
+            <span>Win32Forge — package and publish Intune Win32 apps from PowerShell.</span>
+            <div class="footer-links">
+                <a href="https://github.com/jorgeasaurus/Win32Forge">GitHub</a>
+                <a href="https://www.powershellgallery.com/packages/Win32Forge">PowerShell Gallery</a>
+                <a href="#top">Back to top</a>
+            </div>
         </div>
     </footer>
 
-    <script src="app.js"></script>
+    <p class="sr-only" id="copy-status" aria-live="polite"></p>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js" defer></script>
+    <script src="app.js" defer></script>
 </body>
 </html>

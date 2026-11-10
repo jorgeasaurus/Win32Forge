@@ -129,15 +129,7 @@ function Invoke-BuildModule {
     New-Item -Path $buildDir -ItemType Directory -Force | Out-Null
 
     foreach ($item in $sourceItems) {
-        $sourcePath = Join-Path -Path $PSScriptRoot -ChildPath $item
-        $destinationPath = Join-Path -Path $buildDir -ChildPath $item
-
-        if ((Get-Item -LiteralPath $sourcePath).PSIsContainer) {
-            Copy-Item -Path $sourcePath -Destination $destinationPath -Recurse -Force
-        }
-        else {
-            Copy-Item -Path $sourcePath -Destination $destinationPath -Force
-        }
+        Copy-Item -Path (Join-Path $PSScriptRoot $item) -Destination (Join-Path $buildDir $item) -Recurse -Force
     }
 
     $manifest = Test-ModuleManifest -Path (Join-Path -Path $buildDir -ChildPath "$moduleName.psd1")

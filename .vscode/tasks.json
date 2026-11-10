@@ -1,0 +1,169 @@
+{
+    "version": "2.0.0",
+    "osx": {
+        "options": {
+            "env": {
+                "PATH": "/opt/homebrew/opt/powershell/bin:${env:PATH}"
+            }
+        }
+    },
+    "tasks": [
+        {
+            "label": "Install Dependencies",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-File",
+                "${workspaceFolder}/build.ps1"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Analyze (PSScriptAnalyzer)",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-File",
+                "${workspaceFolder}/build.ps1",
+                "-Task",
+                "Analyze"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Test (Pester)",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-File",
+                "${workspaceFolder}/build.ps1",
+                "-Task",
+                "Test"
+            ],
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Module",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-File",
+                "${workspaceFolder}/build.ps1",
+                "-Task",
+                "Build"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Full CI",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-File",
+                "${workspaceFolder}/build.ps1",
+                "-Task",
+                "CI"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-File",
+                "${workspaceFolder}/build.ps1",
+                "-Task",
+                "Clean"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Import Local",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "Import-Module \"${workspaceFolder}/Win32Forge.psd1\" -Force -Verbose"
+            ],
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Get ReleaseNotes",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "(Import-PowerShellDataFile ./Win32Forge.psd1).PrivateData.PSData.ReleaseNotes"
+            ],
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Get Version",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "(Import-PowerShellDataFile ./Win32Forge.psd1).ModuleVersion"
+            ],
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

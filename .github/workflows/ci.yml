@@ -88,14 +88,7 @@ jobs:
         shell: pwsh
         run: |
           $manifestPath = Join-Path '${{ env.MODULE_BUILD_PATH }}' '${{ env.MODULE_MANIFEST }}'
-          if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
-            throw "Win32Forge manifest not found at '$manifestPath'."
-          }
-
-          $manifest = Test-ModuleManifest -Path $manifestPath
-          if ($manifest.Name -ne '${{ env.MODULE_NAME }}') {
-            throw "Expected module '${{ env.MODULE_NAME }}', but artifact contains '$($manifest.Name)'."
-          }
+          $manifest = Test-ModuleManifest -Path $manifestPath -ErrorAction Stop
 
           $tagVersion = '${{ github.ref_name }}' -replace '^v', ''
           if ([string]$manifest.Version -ne $tagVersion) {

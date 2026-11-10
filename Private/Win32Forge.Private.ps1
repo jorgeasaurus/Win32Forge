@@ -1,54 +1,9 @@
 $script:Win32LobAppType = 'microsoft.graph.win32LobApp'
-$script:DefaultGraphScopes = @('DeviceManagementApps.ReadWrite.All')
-$script:DefaultChunkSizeInBytes = 6MB
+$script:ChunkSizeInBytes = 6MB
 $script:SasRenewalIntervalMilliseconds = 450000
 $script:ComparisonDetectionOperators = @('notConfigured', 'equal', 'notEqual', 'greaterThan', 'greaterThanOrEqual', 'lessThan', 'lessThanOrEqual')
 $script:FileSystemDetectionTypes = @('notConfigured', 'exists', 'modifiedDate', 'createdDate', 'version', 'sizeInMB', 'doesNotExist')
 $script:RegistryDetectionTypes = @('notConfigured', 'exists', 'doesNotExist', 'string', 'integer', 'version')
-
-function Test-PublisherRequiredModule {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Name,
-
-        [string]$CommandName
-    )
-
-    $module = Get-Module -ListAvailable -Name $Name | Select-Object -First 1
-    if (-not $module) {
-        throw "Required PowerShell module '$Name' is not installed. Install it with: Install-Module $Name -Scope CurrentUser"
-    }
-
-    Import-Module $Name -ErrorAction Stop
-
-    if ($CommandName -and -not (Get-Command -Name $CommandName -ErrorAction SilentlyContinue)) {
-        throw "Required command '$CommandName' was not found after importing module '$Name'."
-    }
-}
-
-function Resolve-IntuneWin32PublisherPath {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Path,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateSet('Container', 'Leaf')]
-        [string]$PathType
-    )
-
-    $resolved = Resolve-Path -LiteralPath $Path -ErrorAction Stop
-    $providerPath = $resolved.ProviderPath
-
-    if (-not (Test-Path -LiteralPath $providerPath -PathType $PathType)) {
-        throw "Path '$Path' must be a $PathType path."
-    }
-
-    $providerPath
-}
 
 function Resolve-IntuneWin32PublisherFile {
     [CmdletBinding()]
@@ -80,21 +35,6 @@ function Resolve-IntuneWin32PublisherFile {
     (Resolve-Path -LiteralPath $candidate -ErrorAction Stop).ProviderPath
 }
 
-function Get-SourceRelativePath {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$SourceDirectory,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$FilePath
-    )
-
-    [System.IO.Path]::GetRelativePath($SourceDirectory, $FilePath).Replace('\', '/')
-}
-
 function Compress-IntuneWin32PackageFile {
     [CmdletBinding()]
     param(
@@ -110,12 +50,6 @@ function Compress-IntuneWin32PackageFile {
         [ValidateNotNullOrEmpty()]
         [string]$OutputDirectory
     )
-
-    Test-PublisherRequiredModule -Name 'SvRooij.ContentPrep.Cmdlet' -CommandName 'New-IntuneWinPackage'
-
-    if (-not (Test-Path -LiteralPath $OutputDirectory -PathType Container)) {
-        New-Item -Path $OutputDirectory -ItemType Directory -Force | Out-Null
-    }
 
     # Package into a fresh per-invocation directory so the output file is unambiguous,
     # then move it to the caller-facing output directory.
@@ -147,7 +81,6 @@ function Get-IntuneWin32PackageManifest {
         [string]$PackagePath
     )
 
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [System.IO.Compression.ZipFile]::OpenRead($PackagePath)
     try {
         $entry = $archive.Entries | Where-Object { $_.Name -eq 'detection.xml' } | Select-Object -First 1
@@ -155,18 +88,13 @@ function Get-IntuneWin32PackageManifest {
             throw "Package '$PackagePath' does not contain detection.xml."
         }
 
-        $stream = $entry.Open()
+        # Disposing the reader also disposes the entry stream.
+        $reader = [System.IO.StreamReader]::new($entry.Open())
         try {
-            $reader = [System.IO.StreamReader]::new($stream)
-            try {
-                [xml]$xml = $reader.ReadToEnd()
-            }
-            finally {
-                $reader.Dispose()
-            }
+            [xml]$xml = $reader.ReadToEnd()
         }
         finally {
-            $stream.Dispose()
+            $reader.Dispose()
         }
     }
     finally {
@@ -196,11 +124,8 @@ function Expand-IntuneWin32EncryptedFile {
         [string]$DestinationDirectory
     )
 
-    if (-not (Test-Path -LiteralPath $DestinationDirectory -PathType Container)) {
-        New-Item -Path $DestinationDirectory -ItemType Directory -Force | Out-Null
-    }
+    New-Item -Path $DestinationDirectory -ItemType Directory -Force | Out-Null
 
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [System.IO.Compression.ZipFile]::OpenRead($PackagePath)
     try {
         $entry = $archive.Entries | Where-Object { $_.Name -eq $FileName } | Select-Object -First 1
@@ -217,30 +142,6 @@ function Expand-IntuneWin32EncryptedFile {
     }
 }
 
-function ConvertTo-PowerShellScriptDetectionRule {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$ScriptPath,
-
-        [bool]$EnforceSignatureCheck = $false,
-
-        [bool]$RunAs32Bit = $false
-    )
-
-    if (-not (Test-Path -LiteralPath $ScriptPath -PathType Leaf)) {
-        throw "Detection script '$ScriptPath' was not found."
-    }
-
-    @{
-        '@odata.type'         = '#microsoft.graph.win32LobAppPowerShellScriptDetection'
-        enforceSignatureCheck = $EnforceSignatureCheck
-        runAs32Bit            = $RunAs32Bit
-        scriptContent         = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($ScriptPath))
-    }
-}
-
 function Get-DetectionRuleValue {
     [CmdletBinding()]
     param(
@@ -249,197 +150,43 @@ function Get-DetectionRuleValue {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$RuleType,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
         [string]$Name,
 
-        [object]$Default
-    )
+        [object]$Default,
 
-    if ($Rule.Contains($Name)) {
-        return $Rule[$Name]
-    }
-
-    if ($PSBoundParameters.ContainsKey('Default')) {
-        return $Default
-    }
-
-    throw "$RuleType detection rule is missing required property '$Name'."
-}
-
-function Get-DetectionRuleStringValue {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [System.Collections.IDictionary]$Rule,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$RuleType,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Name,
-
-        [object]$Default
-    )
-
-    $parameters = @{
-        Rule     = $Rule
-        RuleType = $RuleType
-        Name     = $Name
-    }
-
-    if ($PSBoundParameters.ContainsKey('Default')) {
-        $parameters.Default = $Default
-    }
-
-    [string](Get-DetectionRuleValue @parameters)
-}
-
-function Get-DetectionRuleBooleanValue {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [System.Collections.IDictionary]$Rule,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$RuleType,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Name,
-
-        [bool]$Default = $false
-    )
-
-    $value = Get-DetectionRuleValue -Rule $Rule -RuleType $RuleType -Name $Name -Default $Default
-    if ($value -isnot [bool]) {
-        throw "$RuleType detection rule $Name must be `$true or `$false."
-    }
-
-    $value
-}
-
-function Get-DetectionRuleEnumValue {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [System.Collections.IDictionary]$Rule,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$RuleType,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Name,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
         [string[]]$AllowedValue,
 
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Description,
-
-        [object]$Default
+        [switch]$Boolean
     )
 
-    $parameters = @{
-        Rule     = $Rule
-        RuleType = $RuleType
-        Name     = $Name
+    $ruleType = $Rule['Type']
+    $value = if ($Rule.Contains($Name)) {
+        $Rule[$Name]
+    }
+    elseif ($PSBoundParameters.ContainsKey('Default')) {
+        $Default
+    }
+    elseif ($Boolean) {
+        $false
+    }
+    else {
+        throw "$ruleType detection rule is missing required property '$Name'."
     }
 
-    if ($PSBoundParameters.ContainsKey('Default')) {
-        $parameters.Default = $Default
+    if ($Boolean) {
+        if ($value -isnot [bool]) {
+            throw "$ruleType detection rule $Name must be `$true or `$false."
+        }
+
+        return $value
     }
 
-    $value = Get-DetectionRuleStringValue @parameters
-    if ($value -cnotin $AllowedValue) {
-        throw "Unsupported $Description '$value'."
+    $value = [string]$value
+    if ($AllowedValue -and $value -cnotin $AllowedValue) {
+        throw "Unsupported $ruleType detection rule $Name '$value'."
     }
 
     $value
-}
-
-function ConvertTo-Win32LobAppPowerShellScriptDetectionRule {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [System.Collections.IDictionary]$Rule,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$SourceDirectory,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$DefaultDetectionScript
-    )
-
-    $scriptFileName = Get-DetectionRuleStringValue -Rule $Rule -RuleType 'PowerShellScript' -Name 'ScriptPath' -Default $DefaultDetectionScript
-    $scriptPath = Resolve-IntuneWin32PublisherFile -SourceDirectory $SourceDirectory -FileName $scriptFileName -Purpose 'Detection script'
-
-    ConvertTo-PowerShellScriptDetectionRule `
-        -ScriptPath $scriptPath `
-        -EnforceSignatureCheck (Get-DetectionRuleBooleanValue -Rule $Rule -RuleType 'PowerShellScript' -Name 'EnforceSignatureCheck') `
-        -RunAs32Bit (Get-DetectionRuleBooleanValue -Rule $Rule -RuleType 'PowerShellScript' -Name 'RunAs32Bit')
-}
-
-function ConvertTo-Win32LobAppFileSystemDetectionRule {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [System.Collections.IDictionary]$Rule
-    )
-
-    @{
-        '@odata.type'        = '#microsoft.graph.win32LobAppFileSystemDetection'
-        path                 = Get-DetectionRuleStringValue -Rule $Rule -RuleType 'FileSystem' -Name 'Path'
-        fileOrFolderName     = Get-DetectionRuleStringValue -Rule $Rule -RuleType 'FileSystem' -Name 'FileOrFolderName'
-        check32BitOn64System = Get-DetectionRuleBooleanValue -Rule $Rule -RuleType 'FileSystem' -Name 'Check32BitOn64System'
-        detectionType        = Get-DetectionRuleEnumValue -Rule $Rule -RuleType 'FileSystem' -Name 'DetectionType' -AllowedValue $script:FileSystemDetectionTypes -Description 'file system detection type'
-        operator             = Get-DetectionRuleEnumValue -Rule $Rule -RuleType 'FileSystem' -Name 'Operator' -AllowedValue $script:ComparisonDetectionOperators -Description 'file system detection operator' -Default 'notConfigured'
-        detectionValue       = Get-DetectionRuleStringValue -Rule $Rule -RuleType 'FileSystem' -Name 'DetectionValue' -Default ''
-    }
-}
-
-function ConvertTo-Win32LobAppRegistryDetectionRule {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [System.Collections.IDictionary]$Rule
-    )
-
-    @{
-        '@odata.type'        = '#microsoft.graph.win32LobAppRegistryDetection'
-        check32BitOn64System = Get-DetectionRuleBooleanValue -Rule $Rule -RuleType 'Registry' -Name 'Check32BitOn64System'
-        keyPath              = Get-DetectionRuleStringValue -Rule $Rule -RuleType 'Registry' -Name 'KeyPath'
-        valueName            = Get-DetectionRuleStringValue -Rule $Rule -RuleType 'Registry' -Name 'ValueName' -Default ''
-        detectionType        = Get-DetectionRuleEnumValue -Rule $Rule -RuleType 'Registry' -Name 'DetectionType' -AllowedValue $script:RegistryDetectionTypes -Description 'registry detection type'
-        operator             = Get-DetectionRuleEnumValue -Rule $Rule -RuleType 'Registry' -Name 'Operator' -AllowedValue $script:ComparisonDetectionOperators -Description 'registry detection operator' -Default 'notConfigured'
-        detectionValue       = Get-DetectionRuleStringValue -Rule $Rule -RuleType 'Registry' -Name 'DetectionValue' -Default ''
-    }
-}
-
-function ConvertTo-Win32LobAppProductCodeDetectionRule {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [System.Collections.IDictionary]$Rule
-    )
-
-    @{
-        '@odata.type'          = '#microsoft.graph.win32LobAppProductCodeDetection'
-        productCode            = Get-DetectionRuleStringValue -Rule $Rule -RuleType 'ProductCode' -Name 'ProductCode'
-        productVersionOperator = Get-DetectionRuleEnumValue -Rule $Rule -RuleType 'ProductCode' -Name 'ProductVersionOperator' -AllowedValue $script:ComparisonDetectionOperators -Description 'product version operator' -Default 'notConfigured'
-        productVersion         = Get-DetectionRuleStringValue -Rule $Rule -RuleType 'ProductCode' -Name 'ProductVersion' -Default ''
-    }
 }
 
 function ConvertTo-Win32LobAppDetectionRule {
@@ -465,31 +212,55 @@ function ConvertTo-Win32LobAppDetectionRule {
         throw "Detection rule is missing required property 'Type'."
     }
 
-    $ruleType = [string]$Rule['Type']
+    $operators = $script:ComparisonDetectionOperators
 
-    switch ($ruleType) {
+    switch ([string]$Rule['Type']) {
         'PowerShellScript' {
-            ConvertTo-Win32LobAppPowerShellScriptDetectionRule -Rule $Rule -SourceDirectory $SourceDirectory -DefaultDetectionScript $DefaultDetectionScript
-            break
+            $scriptFileName = Get-DetectionRuleValue -Rule $Rule -Name 'ScriptPath' -Default $DefaultDetectionScript
+            $scriptPath = Resolve-IntuneWin32PublisherFile -SourceDirectory $SourceDirectory -FileName $scriptFileName -Purpose 'Detection script'
+            @{
+                '@odata.type'         = '#microsoft.graph.win32LobAppPowerShellScriptDetection'
+                enforceSignatureCheck = Get-DetectionRuleValue -Rule $Rule -Name 'EnforceSignatureCheck' -Boolean
+                runAs32Bit            = Get-DetectionRuleValue -Rule $Rule -Name 'RunAs32Bit' -Boolean
+                scriptContent         = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($scriptPath))
+            }
         }
 
         'FileSystem' {
-            ConvertTo-Win32LobAppFileSystemDetectionRule -Rule $Rule
-            break
+            @{
+                '@odata.type'        = '#microsoft.graph.win32LobAppFileSystemDetection'
+                path                 = Get-DetectionRuleValue -Rule $Rule -Name 'Path'
+                fileOrFolderName     = Get-DetectionRuleValue -Rule $Rule -Name 'FileOrFolderName'
+                check32BitOn64System = Get-DetectionRuleValue -Rule $Rule -Name 'Check32BitOn64System' -Boolean
+                detectionType        = Get-DetectionRuleValue -Rule $Rule -Name 'DetectionType' -AllowedValue $script:FileSystemDetectionTypes
+                operator             = Get-DetectionRuleValue -Rule $Rule -Name 'Operator' -AllowedValue $operators -Default 'notConfigured'
+                detectionValue       = Get-DetectionRuleValue -Rule $Rule -Name 'DetectionValue' -Default ''
+            }
         }
 
         'Registry' {
-            ConvertTo-Win32LobAppRegistryDetectionRule -Rule $Rule
-            break
+            @{
+                '@odata.type'        = '#microsoft.graph.win32LobAppRegistryDetection'
+                check32BitOn64System = Get-DetectionRuleValue -Rule $Rule -Name 'Check32BitOn64System' -Boolean
+                keyPath              = Get-DetectionRuleValue -Rule $Rule -Name 'KeyPath'
+                valueName            = Get-DetectionRuleValue -Rule $Rule -Name 'ValueName' -Default ''
+                detectionType        = Get-DetectionRuleValue -Rule $Rule -Name 'DetectionType' -AllowedValue $script:RegistryDetectionTypes
+                operator             = Get-DetectionRuleValue -Rule $Rule -Name 'Operator' -AllowedValue $operators -Default 'notConfigured'
+                detectionValue       = Get-DetectionRuleValue -Rule $Rule -Name 'DetectionValue' -Default ''
+            }
         }
 
         'ProductCode' {
-            ConvertTo-Win32LobAppProductCodeDetectionRule -Rule $Rule
-            break
+            @{
+                '@odata.type'          = '#microsoft.graph.win32LobAppProductCodeDetection'
+                productCode            = Get-DetectionRuleValue -Rule $Rule -Name 'ProductCode'
+                productVersionOperator = Get-DetectionRuleValue -Rule $Rule -Name 'ProductVersionOperator' -AllowedValue $operators -Default 'notConfigured'
+                productVersion         = Get-DetectionRuleValue -Rule $Rule -Name 'ProductVersion' -Default ''
+            }
         }
 
         default {
-            throw "Unsupported detection rule type '$ruleType'. Use PowerShellScript, FileSystem, Registry, ProductCode, or a raw Graph rule with @odata.type."
+            throw "Unsupported detection rule type '$_'. Use PowerShellScript, FileSystem, Registry, ProductCode, or a raw Graph rule with @odata.type."
         }
     }
 }
@@ -508,10 +279,8 @@ function ConvertTo-Win32LobAppDetectionRuleSet {
         [string]$DefaultDetectionScript
     )
 
-    if ($null -eq $Rule -or @($Rule).Count -eq 0) {
-        $scriptPath = Resolve-IntuneWin32PublisherFile -SourceDirectory $SourceDirectory -FileName $DefaultDetectionScript -Purpose 'Detection script'
-        [object[]]$defaultRule = @(ConvertTo-PowerShellScriptDetectionRule -ScriptPath $scriptPath)
-        return , $defaultRule
+    if (-not $Rule) {
+        $Rule = @(@{ Type = 'PowerShellScript' })
     }
 
     [object[]]$convertedRules = @($Rule | ForEach-Object {
@@ -545,54 +314,6 @@ function ConvertTo-IntuneMimeContent {
         type          = $mimeType
         value         = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($Path))
     }
-}
-
-function ConvertTo-Win32LobAppBody {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)] [string]$DisplayName,
-        [Parameter(Mandatory = $true)] [string]$Publisher,
-        [string]$Developer = '',
-        [Parameter(Mandatory = $true)] [string]$Version,
-        [Parameter(Mandatory = $true)] [string]$Description,
-        [Parameter(Mandatory = $true)] [string]$FileName,
-        [Parameter(Mandatory = $true)] [string]$SetupFilePath,
-        [Parameter(Mandatory = $true)] [string]$InstallCommandLine,
-        [Parameter(Mandatory = $true)] [string]$UninstallCommandLine,
-        [Parameter(Mandatory = $true)] [object[]]$DetectionRules,
-        [Parameter(Mandatory = $true)] [object[]]$ReturnCodes,
-        [hashtable]$LargeIcon
-    )
-
-    $body = [ordered]@{
-        '@odata.type'                   = '#microsoft.graph.win32LobApp'
-        displayName                     = $DisplayName
-        description                     = $Description
-        publisher                       = $Publisher
-        displayVersion                  = $Version
-        developer                       = $Developer
-        owner                           = ''
-        notes                           = ''
-        informationUrl                  = $null
-        privacyInformationUrl           = $null
-        isFeatured                      = $false
-        fileName                        = $FileName
-        setupFilePath                   = $SetupFilePath
-        installCommandLine              = $InstallCommandLine
-        uninstallCommandLine            = $UninstallCommandLine
-        installExperience               = @{ runAsAccount = 'system' }
-        minimumSupportedOperatingSystem = @{ v10_1607 = $true }
-        msiInformation                  = $null
-        runAs32bit                      = $false
-        detectionRules                  = @($DetectionRules)
-        returnCodes                     = @($ReturnCodes)
-    }
-
-    if ($LargeIcon) {
-        $body.largeIcon = $LargeIcon
-    }
-
-    $body
 }
 
 function Invoke-IntuneGraphJsonRequest {
@@ -637,23 +358,6 @@ function Get-IntuneWin32AppByDisplayName {
     @($response.value) | Where-Object { $_.displayName -eq $DisplayName -and $_.'@odata.type' -eq '#microsoft.graph.win32LobApp' }
 }
 
-function Remove-IntuneWin32App {
-    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$AppId,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [string]$DisplayName
-    )
-
-    if ($PSCmdlet.ShouldProcess($DisplayName, 'Remove existing Intune Win32 app')) {
-        Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceAppManagement/mobileApps/$AppId" -ErrorAction Stop | Out-Null
-    }
-}
-
 function Wait-IntuneWin32FileProcessing {
     [CmdletBinding()]
     param(
@@ -663,19 +367,14 @@ function Wait-IntuneWin32FileProcessing {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$Stage,
-
-        [ValidateRange(1, 3600)]
-        [int]$MaxAttempts = 600,
-
-        [ValidateRange(1, 300)]
-        [int]$DelaySeconds = 5
+        [string]$Stage
     )
 
+    $maxAttempts = 600
     $successState = "$($Stage)Success"
     $pendingState = "$($Stage)Pending"
 
-    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
         $file = Invoke-MgGraphRequest -Method GET -Uri $FileUri -ErrorAction Stop
         if ($file.uploadState -eq $successState) {
             return $file
@@ -685,10 +384,10 @@ function Wait-IntuneWin32FileProcessing {
             throw "File processing failed at stage '$Stage' with state '$($file.uploadState)'."
         }
 
-        Start-Sleep -Seconds $DelaySeconds
+        Start-Sleep -Seconds 5
     }
 
-    throw "File processing stage '$Stage' did not complete after $MaxAttempts attempts."
+    throw "File processing stage '$Stage' did not complete after $maxAttempts attempts."
 }
 
 function Send-AzureStorageFile {
@@ -696,14 +395,17 @@ function Send-AzureStorageFile {
     param(
         [Parameter(Mandatory = $true)] [string]$SasUri,
         [Parameter(Mandatory = $true)] [string]$FilePath,
-        [Parameter(Mandatory = $true)] [string]$FileUri,
-        [int64]$ChunkSizeInBytes = $script:DefaultChunkSizeInBytes
+        [Parameter(Mandatory = $true)] [string]$FileUri
     )
 
     $stream = [System.IO.File]::OpenRead($FilePath)
     $blockIds = [System.Collections.Generic.List[string]]::new()
-    $buffer = [byte[]]::new($ChunkSizeInBytes)
+    $buffer = [byte[]]::new($script:ChunkSizeInBytes)
     $renewalTimer = [System.Diagnostics.Stopwatch]::StartNew()
+    $blockHeaders = @{
+        'x-ms-blob-type' = 'BlockBlob'
+        'Content-Type'   = 'application/octet-stream'
+    }
 
     try {
         $index = 0
@@ -711,20 +413,12 @@ function Send-AzureStorageFile {
             $blockId = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($index.ToString('000000')))
             $blockIds.Add($blockId)
 
-            if ($bytesRead -eq $buffer.Length) {
-                $chunk = $buffer
-            }
-            else {
+            $chunk = $buffer
+            if ($bytesRead -lt $buffer.Length) {
                 $chunk = [byte[]]::new($bytesRead)
                 [Array]::Copy($buffer, $chunk, $bytesRead)
             }
-
             $blockUri = "$SasUri&comp=block&blockid=$([uri]::EscapeDataString($blockId))"
-            $blockHeaders = @{
-                'x-ms-blob-type' = 'BlockBlob'
-                'Content-Type'   = 'application/octet-stream'
-            }
-
             Invoke-WebRequest -Uri $blockUri -Method Put -Headers $blockHeaders -Body $chunk -UseBasicParsing -ErrorAction Stop | Out-Null
 
             if ($stream.Position -lt $stream.Length -and $renewalTimer.ElapsedMilliseconds -ge $script:SasRenewalIntervalMilliseconds) {
@@ -741,7 +435,7 @@ function Send-AzureStorageFile {
         $stream.Dispose()
     }
 
-    $blockList = ($blockIds.ToArray() | ForEach-Object { "<Latest>$_</Latest>" }) -join ''
+    $blockList = ($blockIds | ForEach-Object { "<Latest>$_</Latest>" }) -join ''
     $blockListBody = "<?xml version=`"1.0`" encoding=`"utf-8`"?><BlockList>$blockList</BlockList>"
     Invoke-RestMethod -Uri "$SasUri&comp=blocklist" -Method Put -Body $blockListBody -ContentType 'application/xml' -ErrorAction Stop | Out-Null
 }
@@ -766,26 +460,36 @@ function Invoke-IntuneWin32LobUpload {
     $appInfo = $metadata.ApplicationInfo
     $encryptionInfo = $appInfo.EncryptionInfo
 
-    $icon = ConvertTo-IntuneMimeContent -Path $IconPath
-    $appBody = ConvertTo-Win32LobAppBody `
-        -DisplayName $DisplayName `
-        -Publisher $Publisher `
-        -Developer $Developer `
-        -Version $Version `
-        -Description $Description `
-        -FileName $appInfo.FileName `
-        -SetupFilePath $appInfo.SetupFile `
-        -InstallCommandLine $InstallCommandLine `
-        -UninstallCommandLine $UninstallCommandLine `
-        -DetectionRules @($DetectionRules) `
-        -ReturnCodes @(
-        @{ returnCode = 0; type = 'success' }
-        @{ returnCode = 1707; type = 'success' }
-        @{ returnCode = 3010; type = 'softReboot' }
-        @{ returnCode = 1641; type = 'hardReboot' }
-        @{ returnCode = 1618; type = 'retry' }
-    ) `
-        -LargeIcon $icon
+    $appBody = [ordered]@{
+        '@odata.type'                   = "#$script:Win32LobAppType"
+        displayName                     = $DisplayName
+        description                     = $Description
+        publisher                       = $Publisher
+        displayVersion                  = $Version
+        developer                       = $Developer
+        owner                           = ''
+        notes                           = ''
+        informationUrl                  = $null
+        privacyInformationUrl           = $null
+        isFeatured                      = $false
+        fileName                        = $appInfo.FileName
+        setupFilePath                   = $appInfo.SetupFile
+        installCommandLine              = $InstallCommandLine
+        uninstallCommandLine            = $UninstallCommandLine
+        installExperience               = @{ runAsAccount = 'system' }
+        minimumSupportedOperatingSystem = @{ v10_1607 = $true }
+        msiInformation                  = $null
+        runAs32bit                      = $false
+        detectionRules                  = @($DetectionRules)
+        returnCodes                     = @(
+            @{ returnCode = 0; type = 'success' }
+            @{ returnCode = 1707; type = 'success' }
+            @{ returnCode = 3010; type = 'softReboot' }
+            @{ returnCode = 1641; type = 'hardReboot' }
+            @{ returnCode = 1618; type = 'retry' }
+        )
+        largeIcon                       = ConvertTo-IntuneMimeContent -Path $IconPath
+    }
 
     $mobileApp = Invoke-IntuneGraphJsonRequest -Method POST -Uri 'beta/deviceAppManagement/mobileApps/' -Body $appBody
     if (-not $mobileApp.id) {
@@ -812,14 +516,13 @@ function Invoke-IntuneWin32LobUpload {
         }
 
         $contentVersionId = $contentVersion.id
-        $fileCreateUri = "beta/deviceAppManagement/mobileApps/$appId/$script:Win32LobAppType/contentVersions/$contentVersionId/files"
+        $fileCreateUri = "$contentVersionUri/$contentVersionId/files"
         $file = Invoke-IntuneGraphJsonRequest -Method POST -Uri $fileCreateUri -Body $fileBody
         if (-not $file.id) {
             throw 'Graph did not return a content file id.'
         }
 
-        $fileId = $file.id
-        $fileUri = "beta/deviceAppManagement/mobileApps/$appId/$script:Win32LobAppType/contentVersions/$contentVersionId/files/$fileId"
+        $fileUri = "$fileCreateUri/$($file.id)"
         $file = Wait-IntuneWin32FileProcessing -FileUri $fileUri -Stage 'AzureStorageUriRequest'
         Send-AzureStorageFile -SasUri $file.azureStorageUri -FilePath $contentFilePath -FileUri $fileUri
 
@@ -835,8 +538,7 @@ function Invoke-IntuneWin32LobUpload {
             }
         }
 
-        $commitFileUri = "$fileUri/commit"
-        Invoke-IntuneGraphJsonRequest -Method POST -Uri $commitFileUri -Body $fileEncryptionInfo | Out-Null
+        Invoke-IntuneGraphJsonRequest -Method POST -Uri "$fileUri/commit" -Body $fileEncryptionInfo | Out-Null
         Wait-IntuneWin32FileProcessing -FileUri $fileUri -Stage 'CommitFile' | Out-Null
 
         $commitAppBody = @{
@@ -846,9 +548,7 @@ function Invoke-IntuneWin32LobUpload {
         Invoke-IntuneGraphJsonRequest -Method PATCH -Uri "beta/deviceAppManagement/mobileApps/$appId" -Body $commitAppBody | Out-Null
     }
     finally {
-        if (Test-Path -LiteralPath $contentFilePath -PathType Leaf) {
-            Remove-Item -LiteralPath $contentFilePath -Force
-        }
+        Remove-Item -LiteralPath $contentFilePath -Force -ErrorAction SilentlyContinue
     }
 
     $mobileApp
@@ -865,11 +565,13 @@ function Connect-IntuneGraph {
         [string]$ClientSecret
     )
 
-    Import-Module Microsoft.Graph.Authentication -ErrorAction Stop
-
     $connectParams = @{
         NoWelcome   = $true
         ErrorAction = 'Stop'
+    }
+
+    if ($TenantId) {
+        $connectParams.TenantId = $TenantId
     }
 
     if ($ClientId -or $ClientSecret) {
@@ -878,14 +580,10 @@ function Connect-IntuneGraph {
         }
 
         $secureSecret = ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
-        $connectParams.TenantId = $TenantId
         $connectParams.ClientSecretCredential = [pscredential]::new($ClientId, $secureSecret)
     }
     else {
-        $connectParams.Scopes = $script:DefaultGraphScopes
-        if ($TenantId) {
-            $connectParams.TenantId = $TenantId
-        }
+        $connectParams.Scopes = 'DeviceManagementApps.ReadWrite.All'
     }
 
     Connect-MgGraph @connectParams | Out-Null

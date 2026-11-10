@@ -1,77 +1,65 @@
-const powerShellBlocks = document.querySelectorAll("pre code");
-const buttons = document.querySelectorAll("[data-copy]");
-const tokenPattern = /('(?:''|[^'])*')|("(?:`.|[^"])*")|(`)|(\$(?:true|false|null|[A-Za-z_][\w:]*)\b)|(-[A-Za-z][\w]*)|(\b(?:Install-Module|Import-Module|Publish-IntuneWin32App)\b)|(\b(?:Type|ProductCode|ScriptPath|EnforceSignatureCheck|RunAs32Bit|Path|FileOrFolderName|DetectionType|Check32BitOn64System|KeyPath|ValueName|Operator|DetectionValue|productCode|productVersionOperator|productVersion)\b(?=\s*=))|([@{}()[\],=])|(\b(?:CurrentUser|FileSystem|Registry|PowerShellScript|exists|version|greaterThanOrEqual|notConfigured)\b)/g;
+window.hljs?.highlightAll();
 
-const escapeHtml = (value) => value.replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "\"": "&quot;",
-    "'": "&#39;"
-})[character]);
+const copyStatus = document.getElementById("copy-status");
 
-const highlightPowerShell = (source) => {
-    let highlighted = "";
-    let lastIndex = 0;
+document.querySelectorAll("[data-copy]").forEach((button) => {
+    const label = button.querySelector("span");
+    const icon = button.querySelector("use");
 
-    source.replace(tokenPattern, (match, singleQuotedString, doubleQuotedString, continuation, variable, parameter, command, property, punctuation, literal, offset) => {
-        highlighted += escapeHtml(source.slice(lastIndex, offset));
-
-        let tokenClass = "ps-literal";
-        if (singleQuotedString || doubleQuotedString) {
-            tokenClass = "ps-string";
-        }
-        else if (continuation) {
-            tokenClass = "ps-continuation";
-        }
-        else if (variable) {
-            tokenClass = "ps-variable";
-        }
-        else if (parameter) {
-            tokenClass = "ps-parameter";
-        }
-        else if (command) {
-            tokenClass = "ps-command";
-        }
-        else if (property) {
-            tokenClass = "ps-property";
-        }
-        else if (punctuation) {
-            tokenClass = "ps-punctuation";
-        }
-
-        highlighted += `<span class="${tokenClass}">${escapeHtml(match)}</span>`;
-        lastIndex = offset + match.length;
-        return match;
-    });
-
-    return highlighted + escapeHtml(source.slice(lastIndex));
-};
-
-powerShellBlocks.forEach((block) => {
-    block.dataset.rawCode = block.textContent;
-    block.innerHTML = highlightPowerShell(block.dataset.rawCode);
-});
-
-buttons.forEach((button) => {
     button.addEventListener("click", async () => {
         const target = document.getElementById(button.dataset.copy);
         if (!target) {
             return;
         }
 
-        const originalLabel = button.getAttribute("aria-label");
         try {
-            await navigator.clipboard.writeText(target.dataset.rawCode || target.innerText);
-            button.setAttribute("aria-label", "Copied");
-            button.style.background = "var(--mint)";
+            await navigator.clipboard.writeText(target.innerText);
+            label.textContent = "Copied";
+            icon.setAttribute("href", "#i-check");
+            button.classList.add("is-copied");
+            copyStatus.textContent = "Copied to clipboard";
             window.setTimeout(() => {
-                button.setAttribute("aria-label", originalLabel);
-                button.style.background = "";
-            }, 1200);
+                label.textContent = "Copy";
+                icon.setAttribute("href", "#i-copy");
+                button.classList.remove("is-copied");
+                copyStatus.textContent = "";
+            }, 1600);
         }
         catch {
-            button.setAttribute("aria-label", "Copy unavailable");
+            label.textContent = "Copy failed";
+            copyStatus.textContent = "Copy failed. Select the code and copy it manually.";
         }
     });
+});
+
+document.querySelectorAll("[data-tabs]").forEach((group) => {
+    const tabs = [...group.querySelectorAll('[role="tab"]')];
+
+    const select = (tab, focus = false) => {
+        tabs.forEach((other) => {
+            const selected = other === tab;
+            other.setAttribute("aria-selected", String(selected));
+            other.tabIndex = selected ? 0 : -1;
+            document.getElementById(other.getAttribute("aria-controls")).hidden = !selected;
+        });
+        if (focus) {
+            tab.focus();
+        }
+    };
+
+    tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => select(tab));
+        tab.addEventListener("keydown", (event) => {
+            const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+            const jump = { Home: 0, End: tabs.length - 1 }[event.key];
+            if (step === undefined && jump === undefined) {
+                return;
+            }
+            event.preventDefault();
+            select(tabs[jump ?? (index + step + tabs.length) % tabs.length], true);
+        });
+    });
+
+    select(tabs[0]);
+    group.classList.add("is-ready");
 });
