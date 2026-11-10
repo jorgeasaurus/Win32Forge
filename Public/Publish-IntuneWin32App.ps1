@@ -2,7 +2,7 @@ function Publish-IntuneWin32App {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
+        [ValidateScript({ Test-Path -LiteralPath $_ -PathType Container }, ErrorMessage = "Source directory '{0}' was not found.")]
         [string]$SourceDirectory,
 
         [Parameter(Mandatory = $true)]
@@ -47,14 +47,14 @@ function Publish-IntuneWin32App {
         [switch]$KeepConnected
     )
 
-    $sourcePath = Resolve-IntuneWin32PublisherPath -Path $SourceDirectory -PathType Container
+    $sourcePath = (Resolve-Path -LiteralPath $SourceDirectory -ErrorAction Stop).ProviderPath
     $installScriptPath = Resolve-IntuneWin32PublisherFile -SourceDirectory $sourcePath -FileName $InstallScript -Purpose 'Install script'
     $uninstallScriptPath = Resolve-IntuneWin32PublisherFile -SourceDirectory $sourcePath -FileName $UninstallScript -Purpose 'Uninstall script'
     $iconPath = Resolve-IntuneWin32PublisherFile -SourceDirectory $sourcePath -FileName $IconFile -Purpose 'Company Portal icon'
     $detectionRules = ConvertTo-Win32LobAppDetectionRuleSet -Rule $DetectionRule -SourceDirectory $sourcePath -DefaultDetectionScript $DetectionScript
 
-    $relativeInstallScript = Get-SourceRelativePath -SourceDirectory $sourcePath -FilePath $installScriptPath
-    $relativeUninstallScript = Get-SourceRelativePath -SourceDirectory $sourcePath -FilePath $uninstallScriptPath
+    $relativeInstallScript = [System.IO.Path]::GetRelativePath($sourcePath, $installScriptPath).Replace('\', '/')
+    $relativeUninstallScript = [System.IO.Path]::GetRelativePath($sourcePath, $uninstallScriptPath).Replace('\', '/')
     $installCommandLine = "powershell.exe -ExecutionPolicy Bypass -File `"$($relativeInstallScript.Replace('"', '\"'))`""
     $uninstallCommandLine = "powershell.exe -ExecutionPolicy Bypass -File `"$($relativeUninstallScript.Replace('"', '\"'))`""
 
@@ -63,8 +63,6 @@ function Publish-IntuneWin32App {
 
     try {
         if ($PSCmdlet.ShouldProcess($Name, 'Package source files and create Intune Win32 app')) {
-            Test-PublisherRequiredModule -Name 'Microsoft.Graph.Authentication'
-
             $packagePath = Compress-IntuneWin32PackageFile -SourceDirectory $sourcePath -SetupFile $relativeInstallScript -OutputDirectory $OutputDirectory
             $context = Connect-IntuneGraph -TenantId $TenantId -ClientId $ClientId -ClientSecret $ClientSecret
 
@@ -74,7 +72,7 @@ function Publish-IntuneWin32App {
             }
 
             foreach ($existingApp in $existingApps) {
-                Remove-IntuneWin32App -AppId $existingApp.id -DisplayName $existingApp.displayName -Confirm:$false
+                Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceAppManagement/mobileApps/$($existingApp.id)" -ErrorAction Stop | Out-Null
             }
 
             $app = Invoke-IntuneWin32LobUpload `
@@ -100,7 +98,7 @@ function Publish-IntuneWin32App {
         }
     }
     finally {
-        if (-not $KeepConnected -and (Get-Command -Name Disconnect-MgGraph -ErrorAction SilentlyContinue)) {
+        if (-not $KeepConnected) {
             Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
         }
 

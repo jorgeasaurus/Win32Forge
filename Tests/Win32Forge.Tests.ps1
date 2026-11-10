@@ -37,16 +37,31 @@ Describe 'Win32Forge helpers' {
         }
 
         It 'builds a PowerShell script detection rule from detection.ps1' {
-            $rule = ConvertTo-PowerShellScriptDetectionRule `
-                -ScriptPath (Join-Path $script:SourceDirectory 'detection.ps1') `
-                -EnforceSignatureCheck $true `
-                -RunAs32Bit $true
-            $decodedScript = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($rule.scriptContent))
+            $rules = ConvertTo-Win32LobAppDetectionRuleSet `
+                -SourceDirectory $script:SourceDirectory `
+                -DefaultDetectionScript 'detection.ps1' `
+                -Rule @(@{ Type = 'PowerShellScript'; EnforceSignatureCheck = $true; RunAs32Bit = $true })
+            $decodedScript = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($rules[0].scriptContent))
 
-            $rule.'@odata.type' | Should -Be '#microsoft.graph.win32LobAppPowerShellScriptDetection'
-            $rule.enforceSignatureCheck | Should -BeTrue
-            $rule.runAs32Bit | Should -BeTrue
+            $rules[0].'@odata.type' | Should -Be '#microsoft.graph.win32LobAppPowerShellScriptDetection'
+            $rules[0].enforceSignatureCheck | Should -BeTrue
+            $rules[0].runAs32Bit | Should -BeTrue
             $decodedScript | Should -Match 'Detected'
+        }
+
+        It 'defaults to the detection.ps1 script rule when no rule is supplied' {
+            $rules = ConvertTo-Win32LobAppDetectionRuleSet -SourceDirectory $script:SourceDirectory -DefaultDetectionScript 'detection.ps1'
+
+            $rules | Should -HaveCount 1
+            $rules[0].'@odata.type' | Should -Be '#microsoft.graph.win32LobAppPowerShellScriptDetection'
+            $rules[0].enforceSignatureCheck | Should -BeFalse
+        }
+
+        It 'rejects unsupported enum values and missing required properties' {
+            { ConvertTo-Win32LobAppDetectionRuleSet -SourceDirectory $script:SourceDirectory -DefaultDetectionScript 'detection.ps1' -Rule @{ Type = 'ProductCode' } } |
+                Should -Throw "*missing required property 'ProductCode'*"
+            { ConvertTo-Win32LobAppDetectionRuleSet -SourceDirectory $script:SourceDirectory -DefaultDetectionScript 'detection.ps1' -Rule @{ Type = 'Registry'; KeyPath = 'HKLM\X'; DetectionType = 'bogus' } } |
+                Should -Throw "*Unsupported Registry detection rule DetectionType 'bogus'*"
         }
 
         It 'builds file system, registry, and product code detection rules from structured input' {
@@ -113,36 +128,6 @@ Describe 'Win32Forge helpers' {
             $icon.value | Should -Not -BeNullOrEmpty
         }
 
-        It 'builds the Win32 app body with default settings and supplied metadata' {
-            $body = ConvertTo-Win32LobAppBody `
-                -DisplayName 'Contoso Tool' `
-                -Publisher 'Contoso' `
-                -Version '1.2.3' `
-                -Description 'Contoso Tool 1.2.3' `
-                -FileName 'install.intunewin' `
-                -SetupFilePath 'install.ps1' `
-                -InstallCommandLine 'powershell.exe -ExecutionPolicy Bypass -File "install.ps1"' `
-                -UninstallCommandLine 'powershell.exe -ExecutionPolicy Bypass -File "uninstall.ps1"' `
-                -DetectionRules @(@{ scriptContent = 'abc' }) `
-                -ReturnCodes @(
-                @{ returnCode = 0; type = 'success' }
-                @{ returnCode = 1707; type = 'success' }
-                @{ returnCode = 3010; type = 'softReboot' }
-                @{ returnCode = 1641; type = 'hardReboot' }
-                @{ returnCode = 1618; type = 'retry' }
-            ) `
-                -LargeIcon @{ type = 'image/png'; value = 'abc' }
-
-            $body.'@odata.type' | Should -Be '#microsoft.graph.win32LobApp'
-            $body.displayName | Should -Be 'Contoso Tool'
-            $body.publisher | Should -Be 'Contoso'
-            $body.displayVersion | Should -Be '1.2.3'
-            $body.installExperience.runAsAccount | Should -Be 'system'
-            $body.minimumSupportedOperatingSystem.v10_1607 | Should -BeTrue
-            $body.detectionRules.Count | Should -Be 1
-            $body.returnCodes.Count | Should -Be 5
-            $body.largeIcon.type | Should -Be 'image/png'
-        }
     }
 }
 
@@ -158,18 +143,12 @@ Describe 'Publish-IntuneWin32App orchestration' {
             Set-Content -Path (Join-Path $script:SourceDirectory 'detection.ps1') -Value 'exit 0'
             [System.IO.File]::WriteAllBytes((Join-Path $script:SourceDirectory 'icon.png'), [byte[]](137, 80, 78, 71, 13, 10, 26, 10))
 
-            function Connect-MgGraph {}
-            function Get-MgContext {}
-            function Disconnect-MgGraph {}
-
-            Mock Test-PublisherRequiredModule {}
-            Mock Import-Module {}
             Mock Connect-MgGraph {}
             Mock Get-MgContext { [pscustomobject]@{ TenantId = 'tenant-1' } }
             Mock Disconnect-MgGraph {}
             Mock Compress-IntuneWin32PackageFile { Join-Path $script:OutputDirectory 'install.intunewin' }
             Mock Get-IntuneWin32AppByDisplayName { @() }
-            Mock Remove-IntuneWin32App {}
+            Mock Invoke-MgGraphRequest {}
             Mock Invoke-IntuneWin32LobUpload {
                 [pscustomobject]@{
                     id          = 'app-1'
@@ -252,8 +231,8 @@ Describe 'Publish-IntuneWin32App orchestration' {
                 -Force `
                 -KeepConnected | Out-Null
 
-            Should -Invoke Remove-IntuneWin32App -ParameterFilter {
-                $AppId -eq 'existing-1' -and $DisplayName -eq 'Contoso Tool'
+            Should -Invoke Invoke-MgGraphRequest -ParameterFilter {
+                $Method -eq 'DELETE' -and $Uri -eq 'beta/deviceAppManagement/mobileApps/existing-1'
             } -Times 1
             Should -Invoke Invoke-IntuneWin32LobUpload -Times 1
         }
@@ -383,6 +362,9 @@ Describe 'Invoke-IntuneWin32LobUpload Graph requests' {
             $createRequest.Body.detectionRules[0].'@odata.type' | Should -Be '#microsoft.graph.win32LobAppFileSystemDetection'
             $createRequest.Body.detectionRules[0].fileOrFolderName | Should -Be 'Contoso.exe'
             $createRequest.Body.largeIcon.type | Should -Be 'image/png'
+            $createRequest.Body.installExperience.runAsAccount | Should -Be 'system'
+            $createRequest.Body.minimumSupportedOperatingSystem.v10_1607 | Should -BeTrue
+            $createRequest.Body.returnCodes.Count | Should -Be 5
 
             Should -Invoke Send-AzureStorageFile -ParameterFilter {
                 $SasUri -eq 'https://storage.example/upload?sas=1' -and
