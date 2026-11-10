@@ -120,6 +120,21 @@ Describe 'Win32Forge helpers' {
             $rules[0] | Should -Be $rawRule
         }
 
+        It 'uploads a partial final block with only the bytes read' {
+            $contentPath = Join-Path $TestDrive 'content.bin'
+            [System.IO.File]::WriteAllBytes($contentPath, [byte[]](1..10))
+            $script:UploadedBodies = [System.Collections.Generic.List[byte[]]]::new()
+            Mock Invoke-WebRequest { $script:UploadedBodies.Add($Body) }
+            Mock Invoke-RestMethod {}
+
+            Send-AzureStorageFile -SasUri 'https://storage.example/upload?sas=1' -FilePath $contentPath -FileUri 'beta/files/file-1'
+
+            $script:UploadedBodies | Should -HaveCount 1
+            $script:UploadedBodies[0].GetType() | Should -Be ([byte[]])
+            $script:UploadedBodies[0] | Should -Be ([byte[]](1..10))
+            Should -Invoke Invoke-RestMethod -Times 1 -ParameterFilter { $Body -like '*<Latest>MDAwMDAw</Latest>*' }
+        }
+
         It 'creates Company Portal icon MIME content from a PNG file' {
             $icon = ConvertTo-IntuneMimeContent -Path (Join-Path $script:SourceDirectory 'icon.png')
 

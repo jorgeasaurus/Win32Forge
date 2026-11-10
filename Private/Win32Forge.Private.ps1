@@ -413,7 +413,11 @@ function Send-AzureStorageFile {
             $blockId = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($index.ToString('000000')))
             $blockIds.Add($blockId)
 
-            [byte[]]$chunk = if ($bytesRead -eq $buffer.Length) { $buffer } else { $buffer[0..($bytesRead - 1)] }
+            $chunk = $buffer
+            if ($bytesRead -lt $buffer.Length) {
+                $chunk = [byte[]]::new($bytesRead)
+                [Array]::Copy($buffer, $chunk, $bytesRead)
+            }
             $blockUri = "$SasUri&comp=block&blockid=$([uri]::EscapeDataString($blockId))"
             Invoke-WebRequest -Uri $blockUri -Method Put -Headers $blockHeaders -Body $chunk -UseBasicParsing -ErrorAction Stop | Out-Null
 

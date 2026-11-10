@@ -358,7 +358,7 @@ Import-Module Win32Forge</code></pre>
                 </div>
                 <div class="code-card tab-panel" role="tabpanel" id="panel-multi" aria-labelledby="tab-multi">
                     <header class="code-head">
-                        <p>Every rule must match for Intune to treat the app as installed.</p>
+                        <p>Every rule must match. Combine file, registry, or product code rules; a script rule must stand alone.</p>
                         <button class="copy-button" type="button" data-copy="publish-multi-rule"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
                     </header>
                     <pre><code class="language-powershell" id="publish-multi-rule">Publish-IntuneWin32App `
@@ -374,8 +374,10 @@ Import-Module Win32Forge</code></pre>
             DetectionType = 'exists'
         }
         @{
-            Type = 'PowerShellScript'
-            ScriptPath = 'detection.ps1'
+            Type = 'FileSystem'
+            Path = 'C:\ProgramData\ContosoSampleApp'
+            FileOrFolderName = 'sample-app.txt'
+            DetectionType = 'exists'
         }
     )</code></pre>
                 </div>

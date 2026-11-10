@@ -239,13 +239,16 @@ Publish-IntuneWin32App `
             Check32BitOn64System = $false
         }
         @{
-            Type = 'PowerShellScript'
-            ScriptPath = 'detection.ps1'
-            EnforceSignatureCheck = $false
-            RunAs32Bit = $false
+            Type = 'FileSystem'
+            Path = 'C:\ProgramData\ContosoSampleApp'
+            FileOrFolderName = 'sample-app.txt'
+            DetectionType = 'exists'
+            Check32BitOn64System = $false
         }
     )
 ```
+
+Intune does not allow a PowerShell script rule alongside manual rules, so combine only file system, registry, and product code rules.
 
 ## Output
 
